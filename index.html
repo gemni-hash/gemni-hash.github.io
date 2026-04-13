@@ -991,7 +991,7 @@
       };
 
       const BILI_VIEW_API = "https://api.bilibili.com/x/web-interface/view";
-      const BILI_PGC_SEASON_API = "https://api.bilibili.com/pgc/view/web/season";
+      const BANGUMI_PROXY_BASE = "";
       const LOOKUP_TIMEOUT_MS = 12000;
       const PREVIEW_TITLES = ["海底探险队", "森林小火车", "云朵故事屋"];
       const QUICK_LIMITS = [0, 30, 45, 60];
@@ -1102,6 +1102,14 @@
           coverFileName: "",
           episodes: [createEpisodeDraft()]
         };
+      }
+
+      function getBangumiProxyBase() {
+        return cleanText(BANGUMI_PROXY_BASE).replace(/\/+$/, "");
+      }
+
+      function isBangumiProxyConfigured() {
+        return Boolean(getBangumiProxyBase());
       }
 
       function todayKey() {
@@ -1947,8 +1955,12 @@
                         <div class="panel-stack" style="margin-top: 18px;">
                           <div class="helper-card">
                             <div>
-                              <h3>从一个 BV 自动导入合集</h3>
-                              <p class="inline-note">适合 Bilibili 上一个视频里带多个分 P 的动画片。输入 BV 后会尝试导入标题、封面和每一集。</p>
+                              <h3>自动导入合集</h3>
+                              <p class="inline-note">适合 Bilibili 上一个视频里带多个分 P 的动画片，也支持番剧 ss...、ep... 和完整番剧链接。番剧导入需要先配置 Cloudflare Worker 代理。</p>
+                            </div>
+                            <div class="player-note" style="margin-bottom: 14px;">
+                              <strong>${isBangumiProxyConfigured() ? "番剧导入代理：已配置" : "番剧导入代理：未配置"}</strong><br />
+                              <span>${isBangumiProxyConfigured() ? "当前环境可尝试自动导入 ss / ep 番剧链接。" : "请先在 index.html 里填写 Cloudflare Worker 地址。BV 导入仍然可用。"}</span>
                             </div>
                             <div class="field-grid compact">
                               <div class="field">
@@ -2713,7 +2725,12 @@
       }
 
       async function fetchBangumiMetadata(reference) {
-        const url = new URL(BILI_PGC_SEASON_API);
+        const proxyBase = getBangumiProxyBase();
+        if (!proxyBase) {
+          throw new Error("番剧自动导入需要先配置 Cloudflare Worker 代理；BV 导入仍然可用。");
+        }
+
+        const url = new URL("/bangumi", `${proxyBase}/`);
         if (reference.kind === "bangumi-season") {
           url.searchParams.set("season_id", String(reference.seasonId));
         } else if (reference.kind === "bangumi-episode") {
@@ -2727,23 +2744,33 @@
           response = await promiseWithTimeout(
             fetch(url.toString(), {
               method: "GET",
+              mode: "cors",
               referrerPolicy: "no-referrer"
             }),
             LOOKUP_TIMEOUT_MS
           );
         } catch (error) {
           if (error instanceof TypeError) {
-            throw new Error("当前环境拦住了番剧自动导入。把页面部署到 HTTPS 静态站后再试，通常就能正常读取。");
+            throw new Error("番剧代理没有返回可用结果。请检查 Worker 地址、跨域配置和网络后再试。");
           }
           throw error;
         }
 
         if (!response.ok) {
-          throw new Error(`Bilibili 返回 ${response.status}，暂时没法读取番剧信息。`);
+          let message = `番剧代理返回 ${response.status}，暂时没法读取番剧信息。`;
+          try {
+            const errorPayload = await response.json();
+            if (errorPayload && typeof errorPayload.message === "string" && errorPayload.message.trim()) {
+              message = errorPayload.message.trim();
+            }
+          } catch (_error) {
+            // Ignore invalid JSON errors and use the default message.
+          }
+          throw new Error(message);
         }
 
         const payload = await response.json();
-        return normalizeBangumiMetadata(payload, reference);
+        return normalizeBangumiProxyPayload(payload, reference);
       }
 
       function promiseWithTimeout(promise, timeoutMs) {
@@ -2792,31 +2819,26 @@
         };
       }
 
-      function normalizeBangumiMetadata(payload, reference) {
+      function normalizeBangumiProxyPayload(payload, reference) {
         if (!payload || typeof payload !== "object") {
-          throw new Error("Bilibili 返回的番剧数据格式不正确。");
+          throw new Error("番剧代理返回的数据格式不正确。");
         }
 
-        if (typeof payload.code === "number" && payload.code !== 0) {
-          throw new Error(payload.message || "Bilibili 暂时没有返回可用的番剧结果。");
+        if (payload.ok !== true) {
+          throw new Error(cleanText(payload.message) || "番剧代理暂时没有返回可用结果。");
         }
 
-        const result = payload.result;
-        if (!result || typeof result !== "object") {
-          throw new Error("没有找到这个番剧链接对应的内容。");
-        }
-
-        const seasonId = normalizePositiveInt(result.season_id);
-        const episodes = Array.isArray(result.episodes)
-          ? result.episodes
+        const seasonId = normalizePositiveInt(payload.seasonId);
+        const episodes = Array.isArray(payload.episodes)
+          ? payload.episodes
               .map((episode, index) => {
-                const episodeId = normalizePositiveInt(episode?.ep_id || episode?.id);
+                const episodeId = normalizePositiveInt(episode?.episodeId);
                 const bvid = extractBvid(episode?.bvid);
                 if (!seasonId || !episodeId) {
                   return null;
                 }
                 return {
-                  title: cleanText(episode?.show_title || episode?.long_title || episode?.share_copy) || `第${index + 1}集`,
+                  title: cleanText(episode?.title || episode?.longTitle) || `第${index + 1}集`,
                   bvid,
                   seasonId,
                   episodeId
@@ -2835,8 +2857,8 @@
             : `ss${seasonId}`;
 
         return {
-          title: cleanText(result.title || result.season_title) || sourceLabel,
-          cover: sanitizeCover(result.cover || result.square_cover),
+          title: cleanText(payload.title) || sourceLabel,
+          cover: sanitizeCover(payload.cover),
           seasonId,
           episodes,
           sourceLabel
