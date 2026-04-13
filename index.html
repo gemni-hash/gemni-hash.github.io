@@ -1,0 +1,3306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#4b74ff" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="小小放映厅" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' https://api.bilibili.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src https://fonts.gstatic.com data:; frame-src https://player.bilibili.com; connect-src 'self' https://api.bilibili.com; object-src 'none'; base-uri 'none'; form-action 'none';"
+  />
+  <title>小小放映厅</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Comic+Neue:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-top: #fff9db;
+      --bg-mid: #f5f4ff;
+      --bg-bottom: #def8f0;
+      --panel: rgba(255, 255, 255, 0.78);
+      --panel-strong: rgba(255, 255, 255, 0.92);
+      --line: rgba(67, 75, 113, 0.14);
+      --line-strong: rgba(67, 75, 113, 0.22);
+      --text: #25304f;
+      --muted: #5d6a88;
+      --blue: #4b74ff;
+      --blue-strong: #3658d4;
+      --orange: #ffac3d;
+      --orange-soft: #ffe0aa;
+      --mint: #4dc6a4;
+      --pink: #ff7399;
+      --danger: #dc4d63;
+      --shadow-xl: 0 28px 70px rgba(65, 78, 146, 0.18);
+      --shadow-lg: 0 18px 46px rgba(65, 78, 146, 0.14);
+      --shadow-sm: 0 10px 24px rgba(65, 78, 146, 0.1);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 18%, rgba(255, 194, 88, 0.34), transparent 28%),
+        radial-gradient(circle at 86% 16%, rgba(88, 146, 255, 0.18), transparent 25%),
+        radial-gradient(circle at 74% 82%, rgba(77, 198, 164, 0.22), transparent 30%),
+        linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 54%, var(--bg-bottom) 100%);
+      font-family: "Baloo 2", "Comic Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      z-index: -1;
+      inset: auto;
+      border-radius: 999px;
+      filter: blur(14px);
+      pointer-events: none;
+    }
+
+    body::before {
+      width: 240px;
+      height: 240px;
+      top: 72px;
+      right: -48px;
+      background: rgba(255, 184, 80, 0.24);
+    }
+
+    body::after {
+      width: 280px;
+      height: 280px;
+      left: -90px;
+      bottom: 24px;
+      background: rgba(72, 116, 255, 0.18);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      touch-action: manipulation;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="password"],
+    input[type="url"] {
+      width: 100%;
+      min-height: 56px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.86);
+      padding: 14px 16px;
+      color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    input[type="file"] {
+      width: 100%;
+      min-height: 56px;
+      border-radius: 18px;
+      border: 1px dashed var(--line-strong);
+      background: rgba(255, 255, 255, 0.72);
+      padding: 14px 16px;
+      color: var(--muted);
+    }
+
+    input::placeholder {
+      color: #8d97b0;
+    }
+
+    input:focus-visible,
+    button:focus-visible {
+      outline: 3px solid rgba(75, 116, 255, 0.3);
+      outline-offset: 3px;
+    }
+
+    #app {
+      width: min(1380px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 22px 0 38px;
+    }
+
+    .shell {
+      display: grid;
+      gap: 22px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+      gap: 18px;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 248, 227, 0.9) 42%, rgba(221, 247, 238, 0.86) 100%);
+      box-shadow: var(--shadow-xl);
+      min-height: 260px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -42px -64px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 48px;
+      background: linear-gradient(180deg, rgba(75, 116, 255, 0.12), rgba(255, 115, 153, 0.14));
+      transform: rotate(-22deg);
+    }
+
+    .hero-copy,
+    .hero-art {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 0.92rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue-strong);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3.35rem);
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
+    .hero p {
+      max-width: 32rem;
+      color: var(--muted);
+      font-size: 1.02rem;
+      margin-top: 12px;
+    }
+
+    .hero-actions,
+    .cluster {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .hero-actions {
+      margin-top: 18px;
+    }
+
+    .hero-art {
+      display: grid;
+      align-content: center;
+      justify-items: end;
+    }
+
+    .hero-bubbles {
+      width: min(100%, 390px);
+      aspect-ratio: 1.08;
+      position: relative;
+    }
+
+    .bubble,
+    .bubble-card {
+      position: absolute;
+      border-radius: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .bubble {
+      inset: auto;
+      border-radius: 999px;
+      filter: blur(2px);
+    }
+
+    .bubble.sun {
+      width: 116px;
+      height: 116px;
+      background: radial-gradient(circle at 38% 30%, #fffbe7, #ffd66c 68%, #ffb042 100%);
+      top: 6%;
+      right: 18%;
+    }
+
+    .bubble.sky {
+      width: 76px;
+      height: 76px;
+      background: radial-gradient(circle at 40% 36%, #eff6ff, #9fb6ff);
+      bottom: 16%;
+      left: 4%;
+    }
+
+    .bubble.mint {
+      width: 52px;
+      height: 52px;
+      background: radial-gradient(circle at 40% 36%, #effff9, #76d4bc);
+      top: 24%;
+      left: 12%;
+    }
+
+    .bubble-card {
+      width: 206px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+    }
+
+    .bubble-card.top {
+      top: 18%;
+      right: 0;
+      transform: rotate(6deg);
+    }
+
+    .bubble-card.bottom {
+      bottom: 8%;
+      left: 16%;
+      transform: rotate(-8deg);
+    }
+
+    .bubble-card h3 {
+      font-size: 1.08rem;
+      margin-bottom: 6px;
+    }
+
+    .bubble-card p {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+
+    .badge,
+    .status-pill,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .status-pill {
+      background: rgba(75, 116, 255, 0.12);
+      color: var(--blue-strong);
+    }
+
+    .badge {
+      background: rgba(255, 172, 61, 0.18);
+      color: #b46900;
+    }
+
+    .tag {
+      background: rgba(77, 198, 164, 0.14);
+      color: #13795d;
+      min-height: 34px;
+      padding-inline: 12px;
+    }
+
+    .primary-button,
+    .secondary-button,
+    .ghost-button,
+    .pill-tab,
+    .mini-button,
+    .danger-button {
+      min-height: 52px;
+      padding: 12px 18px;
+      border-radius: 18px;
+      font-weight: 700;
+      transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+    }
+
+    .primary-button {
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), #6a94ff);
+      box-shadow: 0 14px 28px rgba(75, 116, 255, 0.28);
+    }
+
+    .secondary-button {
+      color: #8b5300;
+      background: linear-gradient(135deg, #ffe7b8, #ffcf7d);
+      box-shadow: 0 12px 24px rgba(255, 172, 61, 0.24);
+    }
+
+    .ghost-button,
+    .pill-tab,
+    .mini-button {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 18px rgba(86, 100, 151, 0.08);
+    }
+
+    .pill-tab.active {
+      background: rgba(75, 116, 255, 0.12);
+      border-color: rgba(75, 116, 255, 0.24);
+      color: var(--blue-strong);
+    }
+
+    .danger-button {
+      color: #fff;
+      background: linear-gradient(135deg, #e35f74, #cf4158);
+      box-shadow: 0 12px 24px rgba(220, 77, 99, 0.22);
+    }
+
+    .primary-button:hover,
+    .secondary-button:hover,
+    .ghost-button:hover,
+    .pill-tab:hover,
+    .mini-button:hover,
+    .danger-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .surface {
+      border: 1px solid rgba(255, 255, 255, 0.48);
+      border-radius: var(--radius-xl);
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .surface-inner {
+      padding: 24px;
+    }
+
+    .section-head,
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .section-head p,
+    .topbar p,
+    .subtle {
+      color: var(--muted);
+    }
+
+    .section-head h2 {
+      font-size: clamp(1.35rem, 2vw, 1.8rem);
+      line-height: 1.1;
+    }
+
+    .library-strip,
+    .preview-strip {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(250px, 310px);
+      gap: 18px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+    }
+
+    .library-strip::-webkit-scrollbar,
+    .preview-strip::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    .library-strip::-webkit-scrollbar-thumb,
+    .preview-strip::-webkit-scrollbar-thumb {
+      background: rgba(110, 128, 179, 0.22);
+      border-radius: 999px;
+    }
+
+    .library-card,
+    .preview-card {
+      overflow: hidden;
+      display: grid;
+      gap: 0;
+      padding: 0;
+      text-align: left;
+      border-radius: 30px;
+      background: var(--panel-strong);
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      box-shadow: var(--shadow-lg);
+      scroll-snap-align: start;
+      min-height: 330px;
+    }
+
+    .library-card {
+      min-width: 0;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .library-card:not(:disabled):hover {
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 24px 52px rgba(76, 90, 153, 0.22);
+    }
+
+    .card-cover,
+    .preview-cover,
+    .mini-cover,
+    .detail-cover {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 4 / 3;
+      background: linear-gradient(160deg, rgba(255, 249, 220, 0.92), rgba(215, 239, 255, 0.94));
+    }
+
+    .detail-cover {
+      border-radius: 26px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-cover img,
+    .preview-cover img,
+    .mini-cover img,
+    .detail-cover img,
+    .cover-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-body,
+    .preview-body {
+      display: grid;
+      align-content: space-between;
+      gap: 10px;
+      padding: 18px;
+      min-height: 150px;
+    }
+
+    .card-body h3,
+    .preview-body h3 {
+      font-size: 1.28rem;
+      line-height: 1.15;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .card-action {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--blue-strong);
+      font-weight: 700;
+      min-height: 56px;
+      padding: 0 18px 18px;
+    }
+
+    .library-card.is-locked {
+      filter: grayscale(0.12);
+    }
+
+    .library-card.is-locked .card-action {
+      color: #9b6682;
+    }
+
+    .empty-state {
+      display: grid;
+      gap: 20px;
+      padding: 24px;
+      border-radius: 30px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 246, 225, 0.92));
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    }
+
+    .empty-copy {
+      display: grid;
+      gap: 12px;
+    }
+
+    .detail-layout,
+    .player-layout,
+    .settings-layout {
+      display: grid;
+      gap: 22px;
+    }
+
+    .detail-hero {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.2fr);
+      gap: 24px;
+      align-items: center;
+    }
+
+    .detail-copy {
+      display: grid;
+      gap: 14px;
+    }
+
+    .detail-copy h1,
+    .player-title {
+      font-size: clamp(1.9rem, 3vw, 2.8rem);
+      line-height: 1.03;
+    }
+
+    .episode-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .episode-button {
+      min-height: 84px;
+      padding: 16px;
+      border-radius: 22px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .episode-button strong {
+      display: block;
+      font-size: 1.06rem;
+      line-height: 1.15;
+    }
+
+    .episode-button span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .player-shell {
+      overflow: hidden;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      background: #0d1838;
+      box-shadow: var(--shadow-xl);
+    }
+
+    .player-shell iframe {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 0;
+      display: block;
+      background: #050a18;
+    }
+
+    .player-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .player-note {
+      padding: 14px 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .player-note strong {
+      color: var(--text);
+    }
+
+    .limit-panel {
+      display: grid;
+      gap: 14px;
+      padding: 26px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255, 240, 240, 0.95), rgba(255, 247, 226, 0.92));
+      border: 1px solid rgba(220, 77, 99, 0.18);
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+      gap: 22px;
+    }
+
+    .panel-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .settings-card {
+      padding: 22px;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.56);
+      background: var(--panel-strong);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field-grid.compact {
+      gap: 10px;
+    }
+
+    .field-grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .segment-tabs,
+    .quick-picks,
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .helper-card {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 22px;
+      border: 1px solid rgba(75, 116, 255, 0.12);
+      background: linear-gradient(180deg, rgba(242, 247, 255, 0.9), rgba(255, 255, 255, 0.84));
+    }
+
+    .helper-card h3 {
+      font-size: 1.06rem;
+      line-height: 1.12;
+    }
+
+    .helper-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .helper-status {
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(67, 75, 113, 0.12);
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.93rem;
+    }
+
+    .helper-status.warn {
+      background: rgba(255, 236, 208, 0.72);
+      color: #9f6500;
+      border-color: rgba(182, 105, 0, 0.18);
+    }
+
+    .helper-status.error {
+      background: rgba(255, 232, 236, 0.78);
+      color: #a53146;
+      border-color: rgba(220, 77, 99, 0.16);
+    }
+
+    .inline-note {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .toggle-row input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      accent-color: var(--blue);
+      flex: none;
+    }
+
+    .install-card {
+      display: grid;
+      gap: 16px;
+      padding: 22px 24px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(232, 244, 255, 0.94), rgba(255, 250, 232, 0.94));
+      border: 1px solid rgba(75, 116, 255, 0.12);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .install-steps {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding-left: 1.25rem;
+      color: var(--muted);
+    }
+
+    .cover-preview {
+      overflow: hidden;
+      border-radius: 26px;
+      aspect-ratio: 4 / 3;
+      background: linear-gradient(160deg, rgba(255, 249, 220, 0.92), rgba(215, 239, 255, 0.94));
+      box-shadow: var(--shadow-sm);
+    }
+
+    .episode-editor {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(92, 111, 170, 0.12);
+      background: rgba(246, 248, 255, 0.76);
+    }
+
+    .manage-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .manage-row {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 22px;
+      border: 1px solid rgba(92, 111, 170, 0.12);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .mini-cover {
+      border-radius: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mini-cover {
+      aspect-ratio: 4 / 3;
+    }
+
+    .manage-copy strong {
+      display: block;
+      font-size: 1.02rem;
+      line-height: 1.15;
+    }
+
+    .manage-copy span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(23, 31, 64, 0.32);
+      backdrop-filter: blur(8px);
+      z-index: 30;
+    }
+
+    .modal-card {
+      width: min(520px, 100%);
+      display: grid;
+      gap: 16px;
+      padding: 24px;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .modal-error {
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(220, 77, 99, 0.1);
+      color: #a53146;
+      font-weight: 700;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      min-width: min(540px, calc(100vw - 24px));
+      max-width: min(640px, calc(100vw - 24px));
+      padding: 14px 16px;
+      border-radius: 18px;
+      color: #fff;
+      background: rgba(37, 48, 79, 0.92);
+      box-shadow: 0 18px 40px rgba(23, 31, 64, 0.28);
+      z-index: 35;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .toast.warn {
+      background: rgba(182, 105, 0, 0.92);
+    }
+
+    .toast.error {
+      background: rgba(167, 47, 69, 0.92);
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 1120px) {
+      .hero,
+      .detail-hero,
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-art {
+        justify-items: start;
+      }
+
+      .bubble-card.bottom {
+        left: 6%;
+      }
+    }
+
+    @media (max-width: 780px) {
+      #app {
+        width: min(100vw, calc(100vw - 16px));
+        padding-top: 12px;
+        padding-bottom: 24px;
+      }
+
+      .hero,
+      .surface-inner,
+      .settings-card,
+      .modal-card {
+        padding: 18px;
+      }
+
+      .field-grid.two,
+      .manage-row {
+        grid-template-columns: 1fr;
+      }
+
+      .manage-row {
+        justify-items: stretch;
+      }
+
+      .row-actions {
+        justify-content: flex-start;
+      }
+
+      .library-strip,
+      .preview-strip {
+        grid-auto-columns: minmax(230px, 84vw);
+      }
+
+      .player-toolbar,
+      .section-head,
+      .topbar {
+        align-items: stretch;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="modal-root"></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEYS = {
+        library: "bili-kids-whitelist.library",
+        settings: "bili-kids-whitelist.settings",
+        usage: "bili-kids-whitelist.usage"
+      };
+
+      const BILI_VIEW_API = "https://api.bilibili.com/x/web-interface/view";
+      const BILI_PGC_SEASON_API = "https://api.bilibili.com/pgc/view/web/season";
+      const LOOKUP_TIMEOUT_MS = 12000;
+      const PREVIEW_TITLES = ["海底探险队", "森林小火车", "云朵故事屋"];
+      const QUICK_LIMITS = [0, 30, 45, 60];
+
+      const app = document.getElementById("app");
+      const modalRoot = document.getElementById("modal-root");
+      const toastNode = document.getElementById("toast");
+
+      const state = {
+        route: "home",
+        library: [],
+        settings: createDefaultSettings(),
+        usage: createDefaultUsage(),
+        addDraft: createDefaultDraft(),
+        lookup: {
+          loading: false,
+          tone: "normal",
+          message: ""
+        },
+        selectedItemId: "",
+        currentItemId: "",
+        currentEpisodeIndex: 0,
+        returnRoute: "home",
+        settingsUnlocked: false,
+        pinDialog: {
+          open: false,
+          mode: "unlock",
+          error: "",
+          values: {
+            pin: "",
+            current: "",
+            next: "",
+            confirm: ""
+          }
+        }
+      };
+
+      let toastTimer = null;
+      let watchTimer = null;
+
+      initialize();
+
+      function initialize() {
+        loadAll();
+        ensureUsageDay();
+        startWatchTicker();
+        bindEvents();
+        installRuntimeTouchIcon();
+        registerPwaSupport();
+        render();
+        window.addEventListener("beforeunload", saveAll);
+        document.addEventListener("visibilitychange", () => {
+          ensureUsageDay();
+          saveUsage();
+          updateLiveLabels();
+        });
+        document.addEventListener("fullscreenchange", updateLiveLabels);
+        window.addEventListener("appinstalled", render);
+      }
+
+      function bindEvents() {
+        app.addEventListener("click", handleAppClick);
+        app.addEventListener("input", handleAppInput);
+        app.addEventListener("change", handleAppChange);
+        modalRoot.addEventListener("click", handleModalClick);
+        modalRoot.addEventListener("input", handleModalInput);
+        window.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && state.pinDialog.open) {
+            closePinDialog();
+          }
+        });
+      }
+
+      function createDefaultSettings() {
+        return {
+          pin: "",
+          dailyLimitMinutes: 0,
+          autoFullscreen: false
+        };
+      }
+
+      function createDefaultUsage() {
+        return {
+          date: todayKey(),
+          secondsWatched: 0
+        };
+      }
+
+      function createEpisodeDraft() {
+        return {
+          title: "",
+          bvid: "",
+          page: "1",
+          seasonId: "",
+          episodeId: ""
+        };
+      }
+
+      function createDefaultDraft() {
+        return {
+          mode: "video",
+          title: "",
+          bvid: "",
+          sourceRef: "",
+          page: "1",
+          coverUrl: "",
+          coverDataUrl: "",
+          coverFileName: "",
+          episodes: [createEpisodeDraft()]
+        };
+      }
+
+      function todayKey() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function safeParse(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch (_error) {
+          return fallback;
+        }
+      }
+
+      function loadAll() {
+        state.library = normalizeLibrary(safeParse(STORAGE_KEYS.library, []));
+        state.settings = normalizeSettings(safeParse(STORAGE_KEYS.settings, createDefaultSettings()));
+        state.usage = normalizeUsage(safeParse(STORAGE_KEYS.usage, createDefaultUsage()));
+      }
+
+      function saveAll() {
+        saveLibrary();
+        saveSettings();
+        saveUsage();
+      }
+
+      function saveLibrary() {
+        localStorage.setItem(STORAGE_KEYS.library, JSON.stringify(state.library));
+      }
+
+      function saveSettings() {
+        localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+      }
+
+      function saveUsage() {
+        localStorage.setItem(STORAGE_KEYS.usage, JSON.stringify(state.usage));
+      }
+
+      function registerPwaSupport() {
+        const secureOrigin =
+          window.location.protocol === "https:" ||
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
+
+        if (!secureOrigin || !("serviceWorker" in navigator)) {
+          return;
+        }
+
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      }
+
+      function installRuntimeTouchIcon() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 180;
+        canvas.height = 180;
+        const context = canvas.getContext("2d");
+        if (!context) {
+          return;
+        }
+
+        const gradient = context.createLinearGradient(0, 0, 180, 180);
+        gradient.addColorStop(0, "#ffd66c");
+        gradient.addColorStop(1, "#4b74ff");
+
+        roundRect(context, 0, 0, 180, 180, 42);
+        context.fillStyle = gradient;
+        context.fill();
+
+        context.globalAlpha = 0.92;
+        roundRect(context, 24, 52, 132, 86, 20);
+        context.fillStyle = "#ffffff";
+        context.fill();
+        context.globalAlpha = 1;
+
+        context.fillStyle = "#3658d4";
+        context.beginPath();
+        context.moveTo(76, 71);
+        context.lineTo(112, 95);
+        context.lineTo(76, 119);
+        context.closePath();
+        context.fill();
+
+        context.fillStyle = "#fff6d4";
+        roundRect(context, 28, 24, 58, 16, 8);
+        context.fill();
+
+        context.fillStyle = "#3658d4";
+        context.font = '700 8px "Baloo 2", "PingFang SC", sans-serif';
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText("儿童模式", 57, 32);
+
+        [
+          [46, 152, 0.82],
+          [64, 152, 0.68],
+          [82, 152, 0.54]
+        ].forEach(([x, y, alpha]) => {
+          context.globalAlpha = alpha;
+          context.beginPath();
+          context.arc(x, y, 7, 0, Math.PI * 2);
+          context.fillStyle = "#ffffff";
+          context.fill();
+        });
+        context.globalAlpha = 1;
+
+        const iconHref = canvas.toDataURL("image/png");
+        let appleIcon = document.querySelector("link[rel='apple-touch-icon']");
+        if (!appleIcon) {
+          appleIcon = document.createElement("link");
+          appleIcon.rel = "apple-touch-icon";
+          document.head.appendChild(appleIcon);
+        }
+        appleIcon.href = iconHref;
+      }
+
+      function roundRect(context, x, y, width, height, radius) {
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + width - radius, y);
+        context.quadraticCurveTo(x + width, y, x + width, y + radius);
+        context.lineTo(x + width, y + height - radius);
+        context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        context.lineTo(x + radius, y + height);
+        context.quadraticCurveTo(x, y + height, x, y + height - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+      }
+
+      function isStandaloneMode() {
+        return window.matchMedia("(display-mode: standalone)").matches || Boolean(window.navigator.standalone);
+      }
+
+      function shouldShowInstallCard() {
+        return !isStandaloneMode();
+      }
+
+      function renderInstallCard() {
+        const isLocalFile = window.location.protocol === "file:";
+        const title = isLocalFile ? "想放到 iPad 主屏幕上？" : "可以像 App 一样放到 iPad 主屏幕";
+        const intro = isLocalFile
+          ? "当前是本地文件模式。想启用主屏幕图标、离线壳和独立窗口，需要把这个目录部署到 HTTPS 静态站。"
+          : "现在已经带有 manifest 和离线壳。用 Safari 打开后，可以加到主屏幕并以独立窗口运行。";
+        const steps = isLocalFile
+          ? [
+              "把整个 `bilibili-kids-whitelist` 目录部署到 HTTPS 静态站。",
+              "在 iPad Safari 打开部署后的网址。",
+              "点分享按钮，再点“添加到主屏幕”。"
+            ]
+          : [
+              "在 iPad Safari 打开这个页面。",
+              "点分享按钮，再点“添加到主屏幕”。",
+              "以后从主屏图标打开，就会进入更接近 App 的全屏模式。"
+            ];
+
+        return `
+          <section class="surface">
+            <div class="surface-inner install-card">
+              <div class="section-head">
+                <div>
+                  <h2>${escapeHtml(title)}</h2>
+                  <p>${escapeHtml(intro)}</p>
+                </div>
+                <span class="badge">PWA 就绪</span>
+              </div>
+              <ol class="install-steps">
+                ${steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
+              </ol>
+            </div>
+          </section>
+        `;
+      }
+
+      function normalizeSettings(raw) {
+        const fallback = createDefaultSettings();
+        if (!raw || typeof raw !== "object") {
+          return fallback;
+        }
+        return {
+          pin: typeof raw.pin === "string" ? raw.pin : "",
+          dailyLimitMinutes: clampInteger(raw.dailyLimitMinutes, 0, 720, 0),
+          autoFullscreen: Boolean(raw.autoFullscreen)
+        };
+      }
+
+      function normalizeUsage(raw) {
+        const fallback = createDefaultUsage();
+        if (!raw || typeof raw !== "object") {
+          return fallback;
+        }
+        const usage = {
+          date: typeof raw.date === "string" ? raw.date : fallback.date,
+          secondsWatched: clampInteger(raw.secondsWatched, 0, 86400, 0)
+        };
+        if (usage.date !== todayKey()) {
+          return createDefaultUsage();
+        }
+        return usage;
+      }
+
+      function normalizeLibrary(raw) {
+        if (!Array.isArray(raw)) {
+          return [];
+        }
+        return raw
+          .map((item, index) => normalizeItem(item, index))
+          .filter(Boolean);
+      }
+
+      function normalizeItem(item, index) {
+        if (!item || typeof item !== "object") {
+          return null;
+        }
+
+        const id = typeof item.id === "string" && item.id ? item.id : createId();
+        const title = cleanText(item.title) || `动画片 ${index + 1}`;
+        const cover = sanitizeCover(item.cover);
+
+        if (item.type === "series" || Array.isArray(item.episodes)) {
+          const episodes = Array.isArray(item.episodes)
+            ? item.episodes.map((episode, episodeIndex) => normalizeEpisode(episode, episodeIndex)).filter(Boolean)
+            : [];
+
+          if (!episodes.length) {
+            const fallbackEpisode = normalizeEpisode(item, 0);
+            if (fallbackEpisode) {
+              episodes.push({
+                ...fallbackEpisode,
+                title: fallbackEpisode.title || "第1集"
+              });
+            }
+          }
+
+          if (!episodes.length) {
+            return null;
+          }
+
+          return {
+            id,
+            type: "series",
+            title,
+            cover,
+            episodes
+          };
+        }
+
+        const bvid = extractBvid(item.bvid);
+        const seasonId = normalizePositiveInt(item.seasonId);
+        const episodeId = normalizePositiveInt(item.episodeId);
+        if (!bvid && !(seasonId && episodeId)) {
+          return null;
+        }
+
+        return {
+          id,
+          type: "video",
+          title,
+          cover,
+          bvid,
+          page: normalizePage(item.page),
+          seasonId,
+          episodeId
+        };
+      }
+
+      function normalizeEpisode(episode, index) {
+        if (!episode || typeof episode !== "object") {
+          return null;
+        }
+
+        const bvid = extractBvid(episode.bvid);
+        const seasonId = normalizePositiveInt(episode.seasonId);
+        const episodeId = normalizePositiveInt(episode.episodeId);
+        if (!bvid && !(seasonId && episodeId)) {
+          return null;
+        }
+
+        return {
+          title: cleanText(episode.title) || `第${index + 1}集`,
+          bvid,
+          page: normalizePage(episode.page),
+          seasonId,
+          episodeId
+        };
+      }
+
+      function clampInteger(value, min, max, fallback) {
+        const number = Number.parseInt(value, 10);
+        if (!Number.isFinite(number)) {
+          return fallback;
+        }
+        return Math.min(max, Math.max(min, number));
+      }
+
+      function normalizePage(value) {
+        return clampInteger(value, 1, 9999, 1);
+      }
+
+      function normalizePositiveInt(value) {
+        const number = Number.parseInt(value, 10);
+        if (!Number.isFinite(number) || number <= 0) {
+          return 0;
+        }
+        return number;
+      }
+
+      function createId() {
+        return `vid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      function cleanText(value) {
+        return String(value || "").replace(/\s+/g, " ").trim();
+      }
+
+      function extractBvid(value) {
+        const text = String(value || "");
+        const match = text.match(/BV[0-9A-Za-z]{10}/i);
+        if (!match) {
+          return "";
+        }
+        const found = match[0];
+        return found.startsWith("BV") ? found : `BV${found.slice(2)}`;
+      }
+
+      function sanitizeCover(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return "";
+        }
+        try {
+          const url = new URL(text, window.location.href);
+          if (["http:", "https:", "data:", "blob:"].includes(url.protocol)) {
+            return url.href;
+          }
+        } catch (_error) {
+          return "";
+        }
+        return "";
+      }
+
+      function ensureUsageDay() {
+        const today = todayKey();
+        if (state.usage.date !== today) {
+          state.usage = createDefaultUsage();
+          saveUsage();
+        }
+      }
+
+      function startWatchTicker() {
+        if (watchTimer) {
+          clearInterval(watchTimer);
+        }
+
+        watchTimer = window.setInterval(() => {
+          ensureUsageDay();
+          if (state.route !== "player" || document.hidden || isLimitReached()) {
+            updateLiveLabels();
+            return;
+          }
+
+          state.usage.secondsWatched += 1;
+          saveUsage();
+          updateLiveLabels();
+
+          if (isLimitReached()) {
+            handleLimitReached();
+          }
+        }, 1000);
+      }
+
+      function getRemainingSeconds() {
+        if (!state.settings.dailyLimitMinutes) {
+          return null;
+        }
+        return Math.max(0, state.settings.dailyLimitMinutes * 60 - state.usage.secondsWatched);
+      }
+
+      function isLimitReached() {
+        const remaining = getRemainingSeconds();
+        return remaining !== null && remaining <= 0;
+      }
+
+      function formatMinutesFromSeconds(seconds) {
+        if (!seconds) {
+          return "0 分钟";
+        }
+        const minutes = Math.max(1, Math.ceil(seconds / 60));
+        return `${minutes} 分钟`;
+      }
+
+      function remainingLabel() {
+        const remaining = getRemainingSeconds();
+        if (remaining === null) {
+          return "今日不限时";
+        }
+        if (remaining <= 0) {
+          return "今日时长已用完";
+        }
+        return `今日剩余 ${formatMinutesFromSeconds(remaining)}`;
+      }
+
+      function usageLabel() {
+        return `今天已观看 ${formatMinutesFromSeconds(state.usage.secondsWatched)}`;
+      }
+
+      function showToast(message, tone = "normal") {
+        toastNode.textContent = message;
+        toastNode.className = `toast${tone === "normal" ? "" : ` ${tone}`}`;
+        toastNode.hidden = false;
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => {
+          toastNode.hidden = true;
+        }, 2600);
+      }
+
+      function render() {
+        ensureUsageDay();
+        if (state.route === "settings" && !state.settingsUnlocked) {
+          state.route = "home";
+        }
+        app.innerHTML = renderRoute();
+        renderModal();
+        hydrateImages();
+        updateLiveLabels();
+      }
+
+      function renderRoute() {
+        if (state.route === "series") {
+          return renderSeriesView();
+        }
+        if (state.route === "player") {
+          return renderPlayerView();
+        }
+        if (state.route === "settings") {
+          return renderSettingsView();
+        }
+        return renderHomeView();
+      }
+
+      function renderHomeView() {
+        const limitReached = isLimitReached();
+        const cards = state.library.length
+          ? `
+            <div class="surface">
+              <div class="surface-inner">
+                <div class="section-head">
+                  <div>
+                    <h2>今天想看什么？</h2>
+                    <p>横向滑动挑一部，只有白名单内容可以播放。</p>
+                  </div>
+                  <div class="cluster">
+                    <span class="status-pill" data-live="remaining"></span>
+                    <span class="status-pill" data-live="usage"></span>
+                  </div>
+                </div>
+                <div class="library-strip" style="margin-top: 18px;">
+                  ${state.library.map((item) => renderLibraryCard(item, limitReached)).join("")}
+                </div>
+              </div>
+            </div>
+          `
+          : renderEmptyState();
+
+        return `
+          <main class="shell">
+            <section class="hero">
+              <div class="hero-copy">
+                <p class="eyebrow">Bilibili 儿童白名单播放器</p>
+                <h1>小小放映厅</h1>
+                <p>只显示爸爸妈妈挑好的动画片，没有搜索、推荐、评论和其它入口，适合平板上一点就播。</p>
+                <div class="hero-actions">
+                  <span class="badge">官方 iframe 播放器</span>
+                  <span class="tag">大按钮儿童模式</span>
+                  <span class="status-pill" data-live="remaining"></span>
+                  <button class="ghost-button" type="button" data-action="open-settings">家长设置</button>
+                </div>
+              </div>
+              <div class="hero-art">
+                <div class="hero-bubbles" aria-hidden="true">
+                  <div class="bubble sun"></div>
+                  <div class="bubble sky"></div>
+                  <div class="bubble mint"></div>
+                  <div class="bubble-card top">
+                    <h3>只播白名单</h3>
+                    <p>没有首页流，没有搜索框，孩子只能点你选好的内容。</p>
+                  </div>
+                  <div class="bubble-card bottom">
+                    <h3>合集可选集</h3>
+                    <p>一个封面进入后，就能点选每一集播放。</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+            ${shouldShowInstallCard() ? renderInstallCard() : ""}
+            ${cards}
+            ${
+              limitReached
+                ? `
+                  <section class="surface">
+                    <div class="surface-inner limit-panel">
+                      <h2>今天的观看时间已经用完</h2>
+                      <p>家长可以在设置页里调整每日时长，或者明天自动恢复。</p>
+                      <div class="cluster">
+                        <button class="ghost-button" type="button" data-action="open-settings">去家长设置</button>
+                      </div>
+                    </div>
+                  </section>
+                `
+                : ""
+            }
+          </main>
+        `;
+      }
+
+      function renderLibraryCard(item, limitReached) {
+        const cover = getCoverForItem(item);
+        const isSeries = item.type === "series";
+        const meta = isSeries ? `${item.episodes.length} 集合集` : "单集视频";
+        const action = limitReached ? "今日已到时长" : isSeries ? "打开选集" : "立即播放";
+        const disabled = limitReached ? "disabled" : "";
+        const classes = `library-card${limitReached ? " is-locked" : ""}`;
+        return `
+          <button
+            class="${classes}"
+            type="button"
+            data-action="open-item"
+            data-id="${escapeAttr(item.id)}"
+            ${disabled}
+            aria-label="${escapeAttr(item.title)}"
+          >
+            <div class="card-cover">
+              <img src="${escapeAttr(cover)}" data-fallback="${escapeAttr(createPlaceholderCover(item.title))}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+            </div>
+            <div class="card-body">
+              <div class="card-meta">
+                <span class="badge">${escapeHtml(meta)}</span>
+                <span class="tag">${isSeries ? "点进来选集" : "一点就播放"}</span>
+              </div>
+              <div>
+                <h3>${escapeHtml(item.title)}</h3>
+                <p class="subtle">${limitReached ? "已达到今日限制，需家长调整后继续。" : "只会加载这个白名单内容，不会出现推荐页。"}</p>
+              </div>
+            </div>
+            <div class="card-action">
+              <span>${escapeHtml(action)}</span>
+              <span>${isSeries ? "合集" : "播放"}</span>
+            </div>
+          </button>
+        `;
+      }
+
+      function renderEmptyState() {
+        return `
+          <section class="surface">
+            <div class="surface-inner empty-state">
+              <div class="empty-copy">
+                <div class="section-head">
+                  <div>
+                    <h2>还没有白名单内容</h2>
+                    <p>家长在设置里输入 BV 号，就能把动画片变成大卡片。封面不填也没关系，系统会自动生成彩色缩略图。</p>
+                  </div>
+                  <button class="primary-button" type="button" data-action="open-settings">添加第一部动画片</button>
+                </div>
+              </div>
+              <div class="preview-strip">
+                ${PREVIEW_TITLES.map((title) => renderPreviewCard(title)).join("")}
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderPreviewCard(title) {
+        const cover = createPlaceholderCover(title);
+        return `
+          <div class="preview-card" aria-hidden="true">
+            <div class="preview-cover">
+              <img src="${escapeAttr(cover)}" alt="" />
+            </div>
+            <div class="preview-body">
+              <div class="card-meta">
+                <span class="badge">示意卡片</span>
+                <span class="tag">等待家长添加</span>
+              </div>
+              <div>
+                <h3>${escapeHtml(title)}</h3>
+                <p class="subtle">设置完成后，这里会变成真正可点击播放的动画片卡片。</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderSeriesView() {
+        const item = getItemById(state.selectedItemId);
+        if (!item || item.type !== "series") {
+          state.route = "home";
+          return renderHomeView();
+        }
+
+        return `
+          <main class="shell detail-layout">
+            <section class="surface">
+              <div class="surface-inner topbar">
+                <div class="cluster">
+                  <button class="ghost-button" type="button" data-action="go-home">返回片库</button>
+                  <span class="status-pill" data-live="remaining"></span>
+                </div>
+                <button class="ghost-button" type="button" data-action="open-settings">家长设置</button>
+              </div>
+            </section>
+
+            <section class="surface">
+              <div class="surface-inner detail-hero">
+                <div class="detail-cover">
+                  <img src="${escapeAttr(getCoverForItem(item))}" data-fallback="${escapeAttr(createPlaceholderCover(item.title))}" alt="" referrerpolicy="no-referrer" />
+                </div>
+                <div class="detail-copy">
+                  <p class="eyebrow">合集模式</p>
+                  <h1>${escapeHtml(item.title)}</h1>
+                  <p>${item.episodes.length} 集已加入白名单。点任意一集即可播放，播放页也可以切换上一集和下一集。</p>
+                  <div class="cluster">
+                    <span class="badge">${item.episodes.length} 集</span>
+                    <span class="status-pill" data-live="usage"></span>
+                    <button class="primary-button" type="button" data-action="play-episode" data-id="${escapeAttr(item.id)}" data-index="0">播放第一集</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="surface">
+              <div class="surface-inner">
+                <div class="section-head">
+                  <div>
+                    <h2>选一集开始</h2>
+                    <p>每一集都必须在白名单里，孩子无法跳到别的内容。</p>
+                  </div>
+                </div>
+                <div class="episode-grid" style="margin-top: 18px;">
+                  ${item.episodes
+                    .map(
+                      (episode, index) => `
+                        <button
+                          class="episode-button"
+                          type="button"
+                          data-action="play-episode"
+                          data-id="${escapeAttr(item.id)}"
+                          data-index="${index}"
+                        >
+                          <strong>${escapeHtml(episode.title)}</strong>
+                          <span>${escapeHtml(formatEpisodeMeta(episode))}</span>
+                        </button>
+                      `
+                    )
+                    .join("")}
+                </div>
+              </div>
+            </section>
+          </main>
+        `;
+      }
+
+      function renderPlayerView() {
+        const item = getItemById(state.currentItemId);
+        if (!item) {
+          state.route = "home";
+          return renderHomeView();
+        }
+
+        const episodes = getEpisodes(item);
+        const currentIndex = Math.min(state.currentEpisodeIndex, episodes.length - 1);
+        const currentEpisode = episodes[currentIndex];
+        const limitReached = isLimitReached();
+
+        return `
+          <main class="shell player-layout">
+            <section class="surface">
+              <div class="surface-inner player-toolbar">
+                <div>
+                  <p class="eyebrow">正在播放</p>
+                  <h1 class="player-title">${escapeHtml(item.title)}</h1>
+                  <p>${escapeHtml(currentEpisode.title)}</p>
+                </div>
+                <div class="cluster">
+                  <button class="ghost-button" type="button" data-action="leave-player">返回</button>
+                  <button class="secondary-button" type="button" data-action="enter-fullscreen">全屏播放</button>
+                  <span class="status-pill" data-live="remaining"></span>
+                </div>
+              </div>
+            </section>
+
+            ${
+              limitReached
+                ? `
+                  <section class="surface">
+                    <div class="surface-inner limit-panel">
+                      <h2>今天的观看时间已经用完</h2>
+                      <p>为了避免继续播放，播放器已被锁住。家长可以回首页进入设置，调整每日限制。</p>
+                      <div class="cluster">
+                        <button class="ghost-button" type="button" data-action="leave-player">返回首页</button>
+                      </div>
+                    </div>
+                  </section>
+                `
+                : `
+                  <section class="player-shell" id="playerShell">
+                    <iframe
+                      title="${escapeAttr(item.title)}"
+                      src="${escapeAttr(buildPlayerUrl(currentEpisode))}"
+                      allow="fullscreen; autoplay"
+                      allowfullscreen
+                      referrerpolicy="strict-origin-when-cross-origin"
+                      sandbox="allow-same-origin allow-scripts allow-presentation"
+                    ></iframe>
+                  </section>
+                `
+            }
+
+            <section class="surface">
+              <div class="surface-inner">
+                <div class="player-toolbar">
+                  <div class="cluster">
+                    ${
+                      item.type === "series"
+                        ? `
+                          <button
+                            class="ghost-button"
+                            type="button"
+                            data-action="play-episode"
+                            data-id="${escapeAttr(item.id)}"
+                            data-index="${Math.max(0, currentIndex - 1)}"
+                            ${currentIndex === 0 ? "disabled" : ""}
+                          >
+                            上一集
+                          </button>
+                          <button
+                            class="ghost-button"
+                            type="button"
+                            data-action="play-episode"
+                            data-id="${escapeAttr(item.id)}"
+                            data-index="${Math.min(episodes.length - 1, currentIndex + 1)}"
+                            ${currentIndex >= episodes.length - 1 ? "disabled" : ""}
+                          >
+                            下一集
+                          </button>
+                          <button class="ghost-button" type="button" data-action="open-series-picker">回到选集</button>
+                        `
+                        : `
+                          <span class="badge">单视频播放</span>
+                        `
+                    }
+                  </div>
+                  <span class="status-pill" data-live="usage"></span>
+                </div>
+                <p class="player-note" style="margin-top: 16px;">
+                  播放页只嵌入白名单内的 Bilibili 官方播放器，并通过 iframe sandbox 尽量阻止外部跳转；本地界面不会提供搜索、推荐、评论或首页入口。
+                </p>
+              </div>
+            </section>
+          </main>
+        `;
+      }
+
+      function renderSettingsView() {
+        return `
+          <main class="shell settings-layout">
+            <section class="surface">
+              <div class="surface-inner topbar">
+                <div>
+                  <p class="eyebrow">家长区</p>
+                  <h1>管理白名单</h1>
+                  <p>在这里添加 BV、管理合集、设置 PIN 和每日观看时长。</p>
+                </div>
+                <div class="cluster">
+                  <span class="status-pill" data-live="usage"></span>
+                  <button class="ghost-button" type="button" data-action="lock-settings">退出并锁定</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-grid">
+              <div class="panel-stack">
+                <div class="settings-card">
+                  <div class="section-head">
+                    <div>
+                      <h2>添加新内容</h2>
+                      <p>支持单视频和合集。合集里每一集都可以单独填写 BV 号与 P 数。</p>
+                    </div>
+                  </div>
+                  <div class="segment-tabs" style="margin-top: 16px;">
+                    <button class="pill-tab${state.addDraft.mode === "video" ? " active" : ""}" type="button" data-action="switch-draft-mode" data-mode="video">单视频</button>
+                    <button class="pill-tab${state.addDraft.mode === "series" ? " active" : ""}" type="button" data-action="switch-draft-mode" data-mode="series">合集</button>
+                  </div>
+
+                  <div class="field-grid" style="margin-top: 18px;">
+                    <div class="field">
+                      <label for="draft-title">标题（建议填）</label>
+                      <input id="draft-title" type="text" placeholder="例如：海底小纵队" data-draft-field="title" value="${escapeAttr(state.addDraft.title)}" />
+                    </div>
+                    <div class="field">
+                      <label for="draft-cover-url">封面 URL（可选）</label>
+                      <input id="draft-cover-url" type="url" placeholder="https://..." data-draft-field="coverUrl" value="${escapeAttr(state.addDraft.coverUrl)}" />
+                    </div>
+                    <div class="field">
+                      <label for="draft-cover-file">本地封面（可选）</label>
+                      <input id="draft-cover-file" type="file" accept="image/*" data-role="cover-upload" />
+                    </div>
+                    <p class="subtle">${state.addDraft.coverFileName ? `已选择本地封面：${escapeHtml(state.addDraft.coverFileName)}` : "封面不填也可以，系统会自动生成缩略图。"}</p>
+                  </div>
+
+                  ${
+                    state.addDraft.mode === "video"
+                      ? `
+                        <div class="helper-card" style="margin-top: 18px;">
+                          <div>
+                            <h3>自动抓标题和封面</h3>
+                            <p class="inline-note">输入 BV 后点一下，尝试自动补全标题和封面。检测到多 P 时，也会提醒你可以切到合集模式导入。</p>
+                          </div>
+                          <div class="field-grid two">
+                            <div class="field">
+                              <label for="draft-bvid">BV 号</label>
+                              <input id="draft-bvid" type="text" placeholder="BVxxxxxxxxxxxx" data-draft-field="bvid" value="${escapeAttr(state.addDraft.bvid)}" />
+                            </div>
+                            <div class="field">
+                              <label for="draft-page">分 P（可选）</label>
+                              <input id="draft-page" type="number" min="1" step="1" placeholder="默认 1" data-draft-field="page" value="${escapeAttr(state.addDraft.page)}" />
+                            </div>
+                          </div>
+                          <div class="helper-actions">
+                            <button class="ghost-button" type="button" data-action="autofill-video" ${state.lookup.loading ? "disabled" : ""}>
+                              ${state.lookup.loading ? "抓取中..." : "自动抓标题和封面"}
+                            </button>
+                          </div>
+                          ${renderLookupStatus()}
+                        </div>
+                      `
+                      : `
+                        <div class="panel-stack" style="margin-top: 18px;">
+                          <div class="helper-card">
+                            <div>
+                              <h3>从一个 BV 自动导入合集</h3>
+                              <p class="inline-note">适合 Bilibili 上一个视频里带多个分 P 的动画片。输入 BV 后会尝试导入标题、封面和每一集。</p>
+                            </div>
+                            <div class="field-grid compact">
+                              <div class="field">
+                                <label for="draft-source-ref">自动导入链接 / BV / ss / ep</label>
+                                <input id="draft-source-ref" type="text" placeholder="例如：BV... 或 https://www.bilibili.com/bangumi/play/ss45014" data-draft-field="sourceRef" value="${escapeAttr(state.addDraft.sourceRef)}" />
+                              </div>
+                            </div>
+                            <div class="helper-actions">
+                              <button class="ghost-button" type="button" data-action="autofill-series" ${state.lookup.loading ? "disabled" : ""}>
+                                ${state.lookup.loading ? "导入中..." : "自动导入标题、封面和分集"}
+                              </button>
+                            </div>
+                            ${renderLookupStatus()}
+                          </div>
+                          ${state.addDraft.episodes
+                            .map(
+                              (episode, index) => `
+                                <div class="episode-editor">
+                                  <div class="section-head">
+                                    <div>
+                                      <h3>第 ${index + 1} 集</h3>
+                                      <p>每一行都是白名单内的一个可播放条目。</p>
+                                    </div>
+                                    <button class="mini-button" type="button" data-action="remove-episode-row" data-index="${index}" ${state.addDraft.episodes.length === 1 ? "disabled" : ""}>删除这一行</button>
+                                  </div>
+                                  <div class="field-grid">
+                                    <div class="field">
+                                      <label for="episode-title-${index}">集标题</label>
+                                      <input
+                                        id="episode-title-${index}"
+                                        type="text"
+                                        placeholder="例如：第 1 集"
+                                        data-episode-field="title"
+                                        data-index="${index}"
+                                        value="${escapeAttr(episode.title)}"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div class="field-grid two">
+                                    <div class="field">
+                                      <label for="episode-bvid-${index}">BV 号</label>
+                                      <input
+                                        id="episode-bvid-${index}"
+                                        type="text"
+                                        placeholder="BVxxxxxxxxxxxx"
+                                        data-episode-field="bvid"
+                                        data-index="${index}"
+                                        value="${escapeAttr(episode.bvid)}"
+                                      />
+                                    </div>
+                                    <div class="field">
+                                      <label for="episode-page-${index}">分 P（可选）</label>
+                                      <input
+                                        id="episode-page-${index}"
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        placeholder="默认 1"
+                                        data-episode-field="page"
+                                        data-index="${index}"
+                                        value="${escapeAttr(episode.page)}"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              `
+                            )
+                            .join("")}
+                          <div class="row-actions">
+                            <button class="ghost-button" type="button" data-action="add-episode-row">再加一集</button>
+                          </div>
+                        </div>
+                      `
+                  }
+
+                  <div class="row-actions" style="margin-top: 18px;">
+                    <button class="primary-button" type="button" data-action="save-item">加入白名单</button>
+                    <button class="ghost-button" type="button" data-action="reset-draft">清空表单</button>
+                  </div>
+                </div>
+
+                <div class="settings-card">
+                  <div class="section-head">
+                    <div>
+                      <h2>当前白名单</h2>
+                      <p>${state.library.length ? `已保存 ${state.library.length} 项内容。` : "还没有内容，添加后会显示在首页。"} </p>
+                    </div>
+                  </div>
+                  <div class="manage-list">
+                    ${
+                      state.library.length
+                        ? state.library.map((item, index) => renderManageRow(item, index)).join("")
+                        : `<div class="player-note">白名单为空时，首页只会显示引导卡片，不会出现可播放内容。</div>`
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel-stack">
+                <div class="settings-card">
+                  <div class="section-head">
+                    <div>
+                      <h2>封面预览</h2>
+                      <p>用来确认孩子首页看到的缩略图效果。</p>
+                    </div>
+                  </div>
+                  <div class="cover-preview" style="margin-top: 16px;">
+                    <img src="${escapeAttr(getDraftCover())}" data-fallback="${escapeAttr(createPlaceholderCover(state.addDraft.title || "新动画片"))}" alt="" />
+                  </div>
+                </div>
+
+                <div class="settings-card">
+                  <div class="section-head">
+                    <div>
+                      <h2>家长锁</h2>
+                      <p>${state.settings.pin ? "已启用 PIN 保护。" : "第一次进入设置会提示创建 PIN。"} </p>
+                    </div>
+                  </div>
+                  <div class="row-actions" style="margin-top: 16px;">
+                    <button class="ghost-button" type="button" data-action="change-pin">修改 PIN</button>
+                    <button class="ghost-button" type="button" data-action="lock-settings">立即锁定</button>
+                  </div>
+                </div>
+
+                <div class="settings-card">
+                  <div class="section-head">
+                    <div>
+                      <h2>观看限制</h2>
+                      <p>填 0 代表不限时。时长按打开播放页的时间累计，适合做轻量家长控制。</p>
+                    </div>
+                  </div>
+                  <div class="field-grid" style="margin-top: 16px;">
+                    <div class="field">
+                      <label for="daily-limit">每日观看分钟数</label>
+                      <input
+                        id="daily-limit"
+                        type="number"
+                        min="0"
+                        max="720"
+                        step="5"
+                        value="${escapeAttr(String(state.settings.dailyLimitMinutes))}"
+                        data-setting="dailyLimitMinutes"
+                      />
+                    </div>
+                    <div class="quick-picks">
+                      ${QUICK_LIMITS.map(
+                        (minutes) => `
+                          <button
+                            class="pill-tab${state.settings.dailyLimitMinutes === minutes ? " active" : ""}"
+                            type="button"
+                            data-action="quick-limit"
+                            data-minutes="${minutes}"
+                          >
+                            ${minutes === 0 ? "不限时" : `${minutes} 分钟`}
+                          </button>
+                        `
+                      ).join("")}
+                    </div>
+                    <label class="toggle-row">
+                      <span>自动尝试全屏</span>
+                      <input type="checkbox" ${state.settings.autoFullscreen ? "checked" : ""} data-setting="autoFullscreen" />
+                    </label>
+                    <div class="player-note">
+                      <strong data-live="remaining"></strong><br />
+                      <span data-live="usage"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </main>
+        `;
+      }
+
+      function renderManageRow(item, index) {
+        const cover = getCoverForItem(item);
+        const meta = item.type === "series" ? `${item.episodes.length} 集合集` : formatEpisodeMeta(item);
+        return `
+          <div class="manage-row">
+            <div class="mini-cover">
+              <img src="${escapeAttr(cover)}" data-fallback="${escapeAttr(createPlaceholderCover(item.title))}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+            </div>
+            <div class="manage-copy">
+              <strong>${escapeHtml(item.title)}</strong>
+              <span>${escapeHtml(meta)}</span>
+            </div>
+            <div class="row-actions">
+              <button class="mini-button" type="button" data-action="move-item" data-index="${index}" data-direction="up" ${index === 0 ? "disabled" : ""}>上移</button>
+              <button class="mini-button" type="button" data-action="move-item" data-index="${index}" data-direction="down" ${index === state.library.length - 1 ? "disabled" : ""}>下移</button>
+              <button class="danger-button" type="button" data-action="delete-item" data-index="${index}">删除</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function formatEpisodeMeta(episode) {
+        if (episode.seasonId && episode.episodeId) {
+          return `番剧 · ss${episode.seasonId} · ep${episode.episodeId}`;
+        }
+        if (episode.bvid) {
+          return `${episode.bvid}${episode.page > 1 ? ` · 第 ${episode.page} P` : ""}`;
+        }
+        return "白名单条目";
+      }
+
+      function renderLookupStatus() {
+        if (!state.lookup.message) {
+          return "";
+        }
+        const toneClass = state.lookup.tone === "normal" ? "" : ` ${state.lookup.tone}`;
+        return `<div class="helper-status${toneClass}">${escapeHtml(state.lookup.message)}</div>`;
+      }
+
+      function renderModal() {
+        if (!state.pinDialog.open) {
+          modalRoot.innerHTML = "";
+          return;
+        }
+
+        const mode = state.pinDialog.mode;
+        let title = "输入家长 PIN";
+        let description = "输入正确的 PIN 才能进入设置。";
+        let fields = `
+          <div class="field">
+            <label for="modal-pin">PIN</label>
+            <input id="modal-pin" type="password" inputmode="numeric" maxlength="8" placeholder="4 到 8 位数字" data-modal-field="pin" value="${escapeAttr(state.pinDialog.values.pin)}" />
+          </div>
+        `;
+
+        if (mode === "create") {
+          title = "创建家长 PIN";
+          description = "第一次使用设置页，请先创建 4 到 8 位数字 PIN。";
+          fields = `
+            <div class="field">
+              <label for="modal-next">新的 PIN</label>
+              <input id="modal-next" type="password" inputmode="numeric" maxlength="8" placeholder="4 到 8 位数字" data-modal-field="next" value="${escapeAttr(state.pinDialog.values.next)}" />
+            </div>
+            <div class="field">
+              <label for="modal-confirm">确认 PIN</label>
+              <input id="modal-confirm" type="password" inputmode="numeric" maxlength="8" placeholder="再输一次" data-modal-field="confirm" value="${escapeAttr(state.pinDialog.values.confirm)}" />
+            </div>
+          `;
+        }
+
+        if (mode === "change") {
+          title = "修改家长 PIN";
+          description = "先输入当前 PIN，再设置新的 PIN。";
+          fields = `
+            <div class="field">
+              <label for="modal-current">当前 PIN</label>
+              <input id="modal-current" type="password" inputmode="numeric" maxlength="8" placeholder="当前 PIN" data-modal-field="current" value="${escapeAttr(state.pinDialog.values.current)}" />
+            </div>
+            <div class="field">
+              <label for="modal-next">新的 PIN</label>
+              <input id="modal-next" type="password" inputmode="numeric" maxlength="8" placeholder="4 到 8 位数字" data-modal-field="next" value="${escapeAttr(state.pinDialog.values.next)}" />
+            </div>
+            <div class="field">
+              <label for="modal-confirm">确认 PIN</label>
+              <input id="modal-confirm" type="password" inputmode="numeric" maxlength="8" placeholder="再输一次" data-modal-field="confirm" value="${escapeAttr(state.pinDialog.values.confirm)}" />
+            </div>
+          `;
+        }
+
+        modalRoot.innerHTML = `
+          <div class="modal-backdrop">
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="pin-title">
+              <p class="eyebrow">家长区保护</p>
+              <h2 id="pin-title">${escapeHtml(title)}</h2>
+              <p class="subtle">${escapeHtml(description)}</p>
+              ${state.pinDialog.error ? `<div class="modal-error">${escapeHtml(state.pinDialog.error)}</div>` : ""}
+              <div class="field-grid">
+                ${fields}
+              </div>
+              <div class="row-actions">
+                <button class="primary-button" type="button" data-modal-action="submit">确定</button>
+                <button class="ghost-button" type="button" data-modal-action="close">取消</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      async function handleAppClick(event) {
+        const button = event.target.closest("[data-action]");
+        if (!button) {
+          return;
+        }
+
+        const { action } = button.dataset;
+
+        if (action === "open-settings") {
+          promptForSettings();
+          return;
+        }
+
+        if (action === "go-home") {
+          leaveSettingsIfNeeded();
+          state.route = "home";
+          render();
+          return;
+        }
+
+        if (action === "open-item") {
+          const item = getItemById(button.dataset.id);
+          if (!item) {
+            return;
+          }
+          if (item.type === "series") {
+            state.selectedItemId = item.id;
+            state.route = "series";
+            render();
+            return;
+          }
+          openPlayer(item.id, 0);
+          return;
+        }
+
+        if (action === "play-episode") {
+          openPlayer(button.dataset.id, clampInteger(button.dataset.index, 0, 999, 0));
+          return;
+        }
+
+        if (action === "leave-player") {
+          if (state.returnRoute === "series" && getItemById(state.currentItemId)?.type === "series") {
+            state.selectedItemId = state.currentItemId;
+            state.route = "series";
+          } else {
+            state.route = "home";
+          }
+          render();
+          return;
+        }
+
+        if (action === "open-series-picker") {
+          const current = getItemById(state.currentItemId);
+          if (current && current.type === "series") {
+            state.selectedItemId = current.id;
+            state.route = "series";
+            render();
+          }
+          return;
+        }
+
+        if (action === "enter-fullscreen") {
+          requestPlayerFullscreen();
+          return;
+        }
+
+        if (action === "lock-settings") {
+          leaveSettingsIfNeeded();
+          state.route = "home";
+          render();
+          return;
+        }
+
+        if (action === "change-pin") {
+          openPinDialog("change");
+          return;
+        }
+
+        if (action === "switch-draft-mode") {
+          state.addDraft.mode = button.dataset.mode === "series" ? "series" : "video";
+          if (state.addDraft.mode === "series" && !state.addDraft.episodes.length) {
+            state.addDraft.episodes = [createEpisodeDraft()];
+          }
+          state.lookup = { loading: false, tone: "normal", message: "" };
+          render();
+          return;
+        }
+
+        if (action === "autofill-video") {
+          await autoFillVideoDraft();
+          return;
+        }
+
+        if (action === "autofill-series") {
+          await autoImportSeriesDraft();
+          return;
+        }
+
+        if (action === "add-episode-row") {
+          state.addDraft.episodes.push(createEpisodeDraft());
+          render();
+          return;
+        }
+
+        if (action === "remove-episode-row") {
+          const index = clampInteger(button.dataset.index, 0, state.addDraft.episodes.length - 1, 0);
+          if (state.addDraft.episodes.length === 1) {
+            state.addDraft.episodes[0] = createEpisodeDraft();
+          } else {
+            state.addDraft.episodes.splice(index, 1);
+          }
+          render();
+          return;
+        }
+
+        if (action === "reset-draft") {
+          state.addDraft = createDefaultDraft();
+          state.lookup = { loading: false, tone: "normal", message: "" };
+          render();
+          return;
+        }
+
+        if (action === "save-item") {
+          saveDraftItem();
+          return;
+        }
+
+        if (action === "move-item") {
+          const index = clampInteger(button.dataset.index, 0, state.library.length - 1, 0);
+          const direction = button.dataset.direction === "up" ? -1 : 1;
+          moveLibraryItem(index, index + direction);
+          return;
+        }
+
+        if (action === "delete-item") {
+          deleteLibraryItem(clampInteger(button.dataset.index, 0, state.library.length - 1, 0));
+          return;
+        }
+
+        if (action === "quick-limit") {
+          state.settings.dailyLimitMinutes = clampInteger(button.dataset.minutes, 0, 720, 0);
+          saveSettings();
+          updateLiveLabels();
+          render();
+          showToast("已更新每日观看时长。");
+        }
+      }
+
+      function handleAppInput(event) {
+        const draftField = event.target.dataset.draftField;
+        if (draftField) {
+          state.addDraft[draftField] = event.target.value;
+          if (draftField === "bvid" || draftField === "sourceRef") {
+            state.lookup = { loading: false, tone: "normal", message: "" };
+          }
+          if (draftField === "coverUrl" && state.addDraft.coverDataUrl && event.target.value.trim()) {
+            state.addDraft.coverDataUrl = "";
+            state.addDraft.coverFileName = "";
+          }
+          if (draftField === "title" || draftField === "coverUrl") {
+            updateDraftPreviewImage();
+          }
+          return;
+        }
+
+        const episodeField = event.target.dataset.episodeField;
+        if (episodeField) {
+          const index = clampInteger(event.target.dataset.index, 0, state.addDraft.episodes.length - 1, 0);
+          state.addDraft.episodes[index][episodeField] = event.target.value;
+        }
+      }
+
+      function handleAppChange(event) {
+        const setting = event.target.dataset.setting;
+        if (setting === "dailyLimitMinutes") {
+          state.settings.dailyLimitMinutes = clampInteger(event.target.value, 0, 720, 0);
+          saveSettings();
+          updateLiveLabels();
+          render();
+          showToast("已保存每日观看时长。");
+          return;
+        }
+
+        if (setting === "autoFullscreen") {
+          state.settings.autoFullscreen = Boolean(event.target.checked);
+          saveSettings();
+          showToast("已保存全屏设置。");
+          return;
+        }
+
+        if (event.target.dataset.role === "cover-upload") {
+          handleCoverUpload(event.target.files?.[0]);
+        }
+      }
+
+      async function handleCoverUpload(file) {
+        if (!file) {
+          return;
+        }
+        try {
+          const dataUrl = await readFileAsDataUrl(file);
+          state.addDraft.coverDataUrl = dataUrl;
+          state.addDraft.coverFileName = file.name;
+          state.addDraft.coverUrl = "";
+          render();
+        } catch (_error) {
+          showToast("封面读取失败，请换一张图片试试。", "error");
+        }
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function setLookupState(update) {
+        state.lookup = {
+          loading: false,
+          tone: "normal",
+          message: "",
+          ...state.lookup,
+          ...update
+        };
+      }
+
+      function applyFetchedCover(cover) {
+        if (!cover || state.addDraft.coverDataUrl || state.addDraft.coverUrl) {
+          return;
+        }
+        state.addDraft.coverUrl = cover;
+      }
+
+      function parseImportReference(rawValue) {
+        const value = cleanText(rawValue);
+        if (!value) {
+          return null;
+        }
+
+        const bvid = extractBvid(value);
+        if (bvid) {
+          return {
+            kind: "video",
+            bvid
+          };
+        }
+
+        const seasonMatch = value.match(/(?:^|\/|[?&=])ss(\d+)/i);
+        if (seasonMatch) {
+          return {
+            kind: "bangumi-season",
+            seasonId: normalizePositiveInt(seasonMatch[1])
+          };
+        }
+
+        const episodeMatch = value.match(/(?:^|\/|[?&=])ep(\d+)/i);
+        if (episodeMatch) {
+          return {
+            kind: "bangumi-episode",
+            episodeId: normalizePositiveInt(episodeMatch[1])
+          };
+        }
+
+        const seasonIdMatch = value.match(/[?&]season_id=(\d+)/i);
+        if (seasonIdMatch) {
+          return {
+            kind: "bangumi-season",
+            seasonId: normalizePositiveInt(seasonIdMatch[1])
+          };
+        }
+
+        const episodeIdMatch = value.match(/[?&]ep_id=(\d+)/i);
+        if (episodeIdMatch) {
+          return {
+            kind: "bangumi-episode",
+            episodeId: normalizePositiveInt(episodeIdMatch[1])
+          };
+        }
+
+        return null;
+      }
+
+      async function autoFillVideoDraft() {
+        const reference = parseImportReference(state.addDraft.bvid);
+        if (!reference) {
+          setLookupState({
+            tone: "warn",
+            message: "先输入正确的 BV 号，再自动抓取。"
+          });
+          render();
+          return;
+        }
+
+        if (reference.kind !== "video") {
+          setLookupState({
+            tone: "warn",
+            message: "这是番剧链接，请切到“合集”模式后用自动导入。"
+          });
+          render();
+          return;
+        }
+
+        setLookupState({
+          loading: true,
+          tone: "normal",
+          message: "正在抓取标题和封面..."
+        });
+        render();
+
+        try {
+          const meta = await fetchBilibiliMetadata(reference.bvid);
+          state.addDraft.title = state.addDraft.title || meta.title;
+          applyFetchedCover(meta.cover);
+          state.addDraft.bvid = meta.bvid;
+          state.addDraft.page = String(meta.pages[0]?.page || 1);
+          setLookupState({
+            loading: false,
+            tone: "normal",
+            message:
+              meta.pages.length > 1
+                ? `已抓到标题和封面。这个 BV 含 ${meta.pages.length} 个分 P，如需合集可切到“合集”模式自动导入。`
+                : "已自动填写标题和封面。"
+          });
+          render();
+          showToast("已自动抓取视频信息。");
+        } catch (error) {
+          setLookupState({
+            loading: false,
+            tone: "error",
+            message: error instanceof Error ? error.message : "自动抓取失败，请稍后重试。"
+          });
+          render();
+        }
+      }
+
+      async function autoImportSeriesDraft() {
+        const reference = parseImportReference(
+          state.addDraft.sourceRef || state.addDraft.episodes.find((episode) => cleanText(episode.bvid))?.bvid
+        );
+
+        if (!reference) {
+          setLookupState({
+            tone: "warn",
+            message: "先输入 BV、ss、ep 或完整番剧链接。"
+          });
+          render();
+          return;
+        }
+
+        setLookupState({
+          loading: true,
+          tone: "normal",
+          message: reference.kind === "video" ? "正在导入 BV 合集信息..." : "正在导入番剧信息..."
+        });
+        render();
+
+        try {
+          if (reference.kind === "video") {
+            const meta = await fetchBilibiliMetadata(reference.bvid);
+            const pages = meta.pages.length ? meta.pages : [{ page: 1, title: meta.title }];
+            state.addDraft.mode = "series";
+            state.addDraft.sourceRef = meta.bvid;
+            state.addDraft.title = state.addDraft.title || meta.title;
+            applyFetchedCover(meta.cover);
+            state.addDraft.episodes = pages.map((page, index) => ({
+              title: cleanText(page.title) || `第${index + 1}集`,
+              bvid: meta.bvid,
+              page: String(normalizePage(page.page)),
+              seasonId: "",
+              episodeId: ""
+            }));
+            setLookupState({
+              loading: false,
+              tone: "normal",
+              message:
+                pages.length > 1
+                  ? `已自动导入 ${pages.length} 集，并补上标题和封面。`
+                  : "这个 BV 只有 1 个分 P，已按单集合集导入。"
+            });
+          } else {
+            const meta = await fetchBangumiMetadata(reference);
+            state.addDraft.mode = "series";
+            state.addDraft.sourceRef = meta.sourceLabel;
+            state.addDraft.title = state.addDraft.title || meta.title;
+            applyFetchedCover(meta.cover);
+            state.addDraft.episodes = meta.episodes.map((episode, index) => ({
+              title: cleanText(episode.title) || `第${index + 1}集`,
+              bvid: episode.bvid,
+              page: "1",
+              seasonId: String(episode.seasonId),
+              episodeId: String(episode.episodeId)
+            }));
+            setLookupState({
+              loading: false,
+              tone: "normal",
+              message: `已导入番剧《${meta.title}》的 ${meta.episodes.length} 集。`
+            });
+          }
+
+          render();
+          showToast("合集信息已自动导入。");
+        } catch (error) {
+          setLookupState({
+            loading: false,
+            tone: "error",
+            message: error instanceof Error ? error.message : "导入合集失败，请稍后重试。"
+          });
+          render();
+        }
+      }
+
+      async function fetchBilibiliMetadata(bvid) {
+        try {
+          const payload = await fetchBilibiliMetadataByFetch(bvid);
+          return normalizeBilibiliMetadata(payload, bvid);
+        } catch (_fetchError) {
+          const payload = await fetchBilibiliMetadataByJsonp(bvid);
+          return normalizeBilibiliMetadata(payload, bvid);
+        }
+      }
+
+      async function fetchBilibiliMetadataByFetch(bvid) {
+        const url = new URL(BILI_VIEW_API);
+        url.searchParams.set("bvid", bvid);
+
+        const response = await promiseWithTimeout(
+          fetch(url.toString(), {
+            method: "GET",
+            referrerPolicy: "no-referrer"
+          }),
+          LOOKUP_TIMEOUT_MS
+        );
+
+        if (!response.ok) {
+          throw new Error(`Bilibili 返回 ${response.status}，暂时没法自动读取。`);
+        }
+        return response.json();
+      }
+
+      function fetchBilibiliMetadataByJsonp(bvid) {
+        return new Promise((resolve, reject) => {
+          const callbackName = `__biliKidsJsonp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const script = document.createElement("script");
+          const url = new URL(BILI_VIEW_API);
+          let timeoutId = 0;
+
+          function cleanup() {
+            if (timeoutId) {
+              window.clearTimeout(timeoutId);
+            }
+            delete window[callbackName];
+            script.remove();
+          }
+
+          window[callbackName] = (payload) => {
+            cleanup();
+            resolve(payload);
+          };
+
+          script.onerror = () => {
+            cleanup();
+            reject(new Error("Bilibili 没有返回可用信息，请稍后再试。"));
+          };
+
+          url.searchParams.set("bvid", bvid);
+          url.searchParams.set("jsonp", "jsonp");
+          url.searchParams.set("callback", callbackName);
+          script.src = url.toString();
+
+          timeoutId = window.setTimeout(() => {
+            cleanup();
+            reject(new Error("自动抓取超时了，请检查网络后重试。"));
+          }, LOOKUP_TIMEOUT_MS);
+
+          document.body.appendChild(script);
+        });
+      }
+
+      async function fetchBangumiMetadata(reference) {
+        const url = new URL(BILI_PGC_SEASON_API);
+        if (reference.kind === "bangumi-season") {
+          url.searchParams.set("season_id", String(reference.seasonId));
+        } else if (reference.kind === "bangumi-episode") {
+          url.searchParams.set("ep_id", String(reference.episodeId));
+        } else {
+          throw new Error("番剧导入参数不正确。");
+        }
+
+        let response;
+        try {
+          response = await promiseWithTimeout(
+            fetch(url.toString(), {
+              method: "GET",
+              referrerPolicy: "no-referrer"
+            }),
+            LOOKUP_TIMEOUT_MS
+          );
+        } catch (error) {
+          if (error instanceof TypeError) {
+            throw new Error("当前环境拦住了番剧自动导入。把页面部署到 HTTPS 静态站后再试，通常就能正常读取。");
+          }
+          throw error;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Bilibili 返回 ${response.status}，暂时没法读取番剧信息。`);
+        }
+
+        const payload = await response.json();
+        return normalizeBangumiMetadata(payload, reference);
+      }
+
+      function promiseWithTimeout(promise, timeoutMs) {
+        return new Promise((resolve, reject) => {
+          const timeoutId = window.setTimeout(() => {
+            reject(new Error("自动抓取超时了，请检查网络后重试。"));
+          }, timeoutMs);
+
+          promise
+            .then((value) => {
+              window.clearTimeout(timeoutId);
+              resolve(value);
+            })
+            .catch((error) => {
+              window.clearTimeout(timeoutId);
+              reject(error);
+            });
+        });
+      }
+
+      function normalizeBilibiliMetadata(payload, fallbackBvid) {
+        if (!payload || typeof payload !== "object") {
+          throw new Error("Bilibili 返回的数据格式不正确。");
+        }
+        if (typeof payload.code === "number" && payload.code !== 0) {
+          throw new Error(payload.message || "Bilibili 暂时没有返回可用结果。");
+        }
+
+        const data = payload.data;
+        if (!data || typeof data !== "object") {
+          throw new Error("没有找到这个 BV 对应的视频信息。");
+        }
+
+        const pages = Array.isArray(data.pages)
+          ? data.pages.map((page, index) => ({
+              page: normalizePage(page?.page),
+              title: cleanText(page?.part) || `第${index + 1}集`
+            }))
+          : [];
+
+        return {
+          bvid: extractBvid(data.bvid) || fallbackBvid,
+          title: cleanText(data.title) || fallbackBvid,
+          cover: sanitizeCover(data.pic),
+          pages
+        };
+      }
+
+      function normalizeBangumiMetadata(payload, reference) {
+        if (!payload || typeof payload !== "object") {
+          throw new Error("Bilibili 返回的番剧数据格式不正确。");
+        }
+
+        if (typeof payload.code === "number" && payload.code !== 0) {
+          throw new Error(payload.message || "Bilibili 暂时没有返回可用的番剧结果。");
+        }
+
+        const result = payload.result;
+        if (!result || typeof result !== "object") {
+          throw new Error("没有找到这个番剧链接对应的内容。");
+        }
+
+        const seasonId = normalizePositiveInt(result.season_id);
+        const episodes = Array.isArray(result.episodes)
+          ? result.episodes
+              .map((episode, index) => {
+                const episodeId = normalizePositiveInt(episode?.ep_id || episode?.id);
+                const bvid = extractBvid(episode?.bvid);
+                if (!seasonId || !episodeId) {
+                  return null;
+                }
+                return {
+                  title: cleanText(episode?.show_title || episode?.long_title || episode?.share_copy) || `第${index + 1}集`,
+                  bvid,
+                  seasonId,
+                  episodeId
+                };
+              })
+              .filter(Boolean)
+          : [];
+
+        if (!episodes.length) {
+          throw new Error("这个番剧没有返回可导入的分集。");
+        }
+
+        const sourceLabel =
+          reference.kind === "bangumi-episode"
+            ? `ep${reference.episodeId || episodes[0].episodeId}`
+            : `ss${seasonId}`;
+
+        return {
+          title: cleanText(result.title || result.season_title) || sourceLabel,
+          cover: sanitizeCover(result.cover || result.square_cover),
+          seasonId,
+          episodes,
+          sourceLabel
+        };
+      }
+
+      function handleModalClick(event) {
+        if (event.target.classList.contains("modal-backdrop")) {
+          closePinDialog();
+          return;
+        }
+        const button = event.target.closest("[data-modal-action]");
+        if (!button) {
+          return;
+        }
+        const { modalAction } = button.dataset;
+        if (modalAction === "close") {
+          closePinDialog();
+          return;
+        }
+        if (modalAction === "submit") {
+          submitPinDialog();
+        }
+      }
+
+      function handleModalInput(event) {
+        const field = event.target.dataset.modalField;
+        if (!field) {
+          return;
+        }
+        state.pinDialog.values[field] = event.target.value;
+        if (state.pinDialog.error) {
+          state.pinDialog.error = "";
+        }
+      }
+
+      function promptForSettings() {
+        if (!state.settings.pin) {
+          openPinDialog("create");
+          return;
+        }
+        openPinDialog("unlock");
+      }
+
+      function openPinDialog(mode) {
+        state.pinDialog = {
+          open: true,
+          mode,
+          error: "",
+          values: {
+            pin: "",
+            current: "",
+            next: "",
+            confirm: ""
+          }
+        };
+        renderModal();
+      }
+
+      function closePinDialog() {
+        state.pinDialog.open = false;
+        state.pinDialog.error = "";
+        renderModal();
+      }
+
+      function validatePin(pin) {
+        return /^\d{4,8}$/.test(pin);
+      }
+
+      function submitPinDialog() {
+        const { mode, values } = state.pinDialog;
+
+        if (mode === "unlock") {
+          if (values.pin !== state.settings.pin) {
+            state.pinDialog.error = "PIN 不正确。";
+            renderModal();
+            return;
+          }
+          state.settingsUnlocked = true;
+          state.route = "settings";
+          closePinDialog();
+          render();
+          return;
+        }
+
+        if (mode === "create") {
+          if (!validatePin(values.next)) {
+            state.pinDialog.error = "PIN 需要是 4 到 8 位数字。";
+            renderModal();
+            return;
+          }
+          if (values.next !== values.confirm) {
+            state.pinDialog.error = "两次输入的 PIN 不一致。";
+            renderModal();
+            return;
+          }
+          state.settings.pin = values.next;
+          state.settingsUnlocked = true;
+          state.route = "settings";
+          saveSettings();
+          closePinDialog();
+          render();
+          showToast("家长 PIN 已创建。");
+          return;
+        }
+
+        if (mode === "change") {
+          if (values.current !== state.settings.pin) {
+            state.pinDialog.error = "当前 PIN 不正确。";
+            renderModal();
+            return;
+          }
+          if (!validatePin(values.next)) {
+            state.pinDialog.error = "新的 PIN 需要是 4 到 8 位数字。";
+            renderModal();
+            return;
+          }
+          if (values.next !== values.confirm) {
+            state.pinDialog.error = "两次输入的 PIN 不一致。";
+            renderModal();
+            return;
+          }
+          state.settings.pin = values.next;
+          saveSettings();
+          closePinDialog();
+          showToast("PIN 已更新。");
+          return;
+        }
+      }
+
+      function leaveSettingsIfNeeded() {
+        state.settingsUnlocked = false;
+      }
+
+      function saveDraftItem() {
+        const title = cleanText(state.addDraft.title);
+
+        const cover = getDraftCover(true);
+
+        if (state.addDraft.mode === "video") {
+          const bvid = extractBvid(state.addDraft.bvid);
+          if (!bvid) {
+            showToast("请输入正确的 BV 号。", "warn");
+            return;
+          }
+
+          state.library.push({
+            id: createId(),
+            type: "video",
+            title: title || bvid,
+            cover,
+            bvid,
+            page: normalizePage(state.addDraft.page)
+          });
+
+          saveLibrary();
+          state.addDraft = createDefaultDraft();
+          state.lookup = { loading: false, tone: "normal", message: "" };
+          render();
+          showToast("单视频已加入白名单。");
+          return;
+        }
+
+        const episodes = [];
+        for (let index = 0; index < state.addDraft.episodes.length; index += 1) {
+          const episode = state.addDraft.episodes[index];
+          const bvid = extractBvid(episode.bvid);
+          const seasonId = normalizePositiveInt(episode.seasonId);
+          const episodeId = normalizePositiveInt(episode.episodeId);
+          const hasAnyValue = cleanText(episode.title) || cleanText(episode.bvid) || seasonId || episodeId;
+          if (!hasAnyValue) {
+            continue;
+          }
+          if (!bvid && !(seasonId && episodeId)) {
+            showToast(`第 ${index + 1} 集缺少可播放信息。`, "warn");
+            return;
+          }
+          episodes.push({
+            title: cleanText(episode.title) || `第${index + 1}集`,
+            bvid,
+            page: normalizePage(episode.page),
+            seasonId,
+            episodeId
+          });
+        }
+
+        if (!episodes.length) {
+          showToast("合集至少要填写一集。", "warn");
+          return;
+        }
+
+        state.library.push({
+          id: createId(),
+          type: "series",
+          title: title || `合集 ${episodes.length} 集`,
+          cover,
+          episodes
+        });
+
+        saveLibrary();
+        state.addDraft = createDefaultDraft();
+        state.lookup = { loading: false, tone: "normal", message: "" };
+        render();
+        showToast("合集已加入白名单。");
+      }
+
+      function moveLibraryItem(from, to) {
+        if (from === to || to < 0 || to >= state.library.length) {
+          return;
+        }
+        const [item] = state.library.splice(from, 1);
+        state.library.splice(to, 0, item);
+        saveLibrary();
+        render();
+      }
+
+      function deleteLibraryItem(index) {
+        const item = state.library[index];
+        if (!item) {
+          return;
+        }
+        const confirmed = window.confirm(`确定删除《${item.title}》吗？`);
+        if (!confirmed) {
+          return;
+        }
+        state.library.splice(index, 1);
+        if (state.selectedItemId === item.id || state.currentItemId === item.id) {
+          state.selectedItemId = "";
+          state.currentItemId = "";
+          state.route = state.settingsUnlocked ? "settings" : "home";
+        }
+        saveLibrary();
+        render();
+        showToast("已从白名单删除。");
+      }
+
+      function getItemById(id) {
+        return state.library.find((item) => item.id === id) || null;
+      }
+
+      function getEpisodes(item) {
+        if (!item) {
+          return [];
+        }
+        if (item.type === "series") {
+          return item.episodes;
+        }
+        return [
+          {
+            title: item.title,
+            bvid: item.bvid,
+            page: item.page,
+            seasonId: item.seasonId,
+            episodeId: item.episodeId
+          }
+        ];
+      }
+
+      function openPlayer(itemId, episodeIndex) {
+        if (isLimitReached()) {
+          showToast("今天的观看时间已经用完，需要家长调整后继续。", "warn");
+          return;
+        }
+
+        const item = getItemById(itemId);
+        if (!item) {
+          return;
+        }
+
+        const episodes = getEpisodes(item);
+        const boundedIndex = clampInteger(episodeIndex, 0, Math.max(episodes.length - 1, 0), 0);
+
+        state.currentItemId = item.id;
+        state.currentEpisodeIndex = boundedIndex;
+        state.returnRoute = item.type === "series" ? "series" : "home";
+        if (item.type === "series") {
+          state.selectedItemId = item.id;
+        }
+        state.route = "player";
+        render();
+
+        if (state.settings.autoFullscreen) {
+          window.requestAnimationFrame(() => {
+            requestPlayerFullscreen(true);
+          });
+        }
+      }
+
+      function buildPlayerUrl(episode) {
+        const url = new URL("https://player.bilibili.com/player.html");
+        if (episode.seasonId && episode.episodeId) {
+          url.searchParams.set("seasonId", String(episode.seasonId));
+          url.searchParams.set("episodeId", String(episode.episodeId));
+        } else {
+          url.searchParams.set("bvid", episode.bvid);
+          if (episode.page > 1) {
+            url.searchParams.set("p", String(episode.page));
+          }
+        }
+        return url.toString();
+      }
+
+      async function requestPlayerFullscreen(silent = false) {
+        const shell = document.getElementById("playerShell");
+        if (!shell || typeof shell.requestFullscreen !== "function") {
+          if (!silent) {
+            showToast("当前浏览器不支持全屏按钮。", "warn");
+          }
+          return;
+        }
+        try {
+          await shell.requestFullscreen();
+        } catch (_error) {
+          if (!silent) {
+            showToast("浏览器没有允许全屏，可以再点一次试试。", "warn");
+          }
+        }
+      }
+
+      function handleLimitReached() {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+        state.route = "home";
+        render();
+        showToast("今天的观看时间已满。", "warn");
+      }
+
+      function updateLiveLabels() {
+        const remaining = remainingLabel();
+        const usage = usageLabel();
+
+        document.querySelectorAll("[data-live='remaining']").forEach((node) => {
+          node.textContent = remaining;
+        });
+        document.querySelectorAll("[data-live='usage']").forEach((node) => {
+          node.textContent = usage;
+        });
+      }
+
+      function getDraftCover(skipFallback = false) {
+        const cover = sanitizeCover(state.addDraft.coverDataUrl || state.addDraft.coverUrl);
+        if (cover) {
+          return cover;
+        }
+        return skipFallback ? "" : createPlaceholderCover(state.addDraft.title || "新动画片");
+      }
+
+      function getCoverForItem(item) {
+        return sanitizeCover(item.cover) || createPlaceholderCover(item.title);
+      }
+
+      function updateDraftPreviewImage() {
+        const preview = app.querySelector(".cover-preview img");
+        if (!preview) {
+          return;
+        }
+        const nextCover = getDraftCover();
+        preview.src = nextCover;
+        preview.dataset.fallback = createPlaceholderCover(state.addDraft.title || "新动画片");
+      }
+
+      function hydrateImages() {
+        app.querySelectorAll("img[data-fallback]").forEach((image) => {
+          image.onerror = () => {
+            if (image.dataset.fallback && image.src !== image.dataset.fallback) {
+              image.src = image.dataset.fallback;
+            }
+          };
+          if (!image.getAttribute("src")) {
+            image.src = image.dataset.fallback;
+          }
+        });
+      }
+
+      function hashString(text) {
+        let hash = 0;
+        for (const character of Array.from(String(text || ""))) {
+          hash = (hash * 31 + character.codePointAt(0)) >>> 0;
+        }
+        return hash;
+      }
+
+      function createPlaceholderCover(title) {
+        const palettes = [
+          { from: "#ffd66c", to: "#ff8f6b", accent: "#3059e8", accentSoft: "#f6fbff", badge: "#fff3cf" },
+          { from: "#7fd7c0", to: "#4d8fff", accent: "#0c3468", accentSoft: "#f2fcff", badge: "#dcfff6" },
+          { from: "#ff9ab3", to: "#ffce75", accent: "#73317a", accentSoft: "#fff7fb", badge: "#ffe4ef" },
+          { from: "#98d8ff", to: "#7a9cff", accent: "#17356d", accentSoft: "#f0f6ff", badge: "#dff0ff" },
+          { from: "#9ce29c", to: "#59c3ae", accent: "#0f5b4d", accentSoft: "#f3fff7", badge: "#dcfff0" }
+        ];
+        const palette = palettes[hashString(title) % palettes.length];
+        const [line1, line2] = splitTitleLines(cleanText(title) || "新动画片");
+        const safeLine1 = escapeSvg(line1);
+        const safeLine2 = escapeSvg(line2 || "");
+        const svg = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="${escapeSvg(title)}">
+            <defs>
+              <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="${palette.from}" />
+                <stop offset="100%" stop-color="${palette.to}" />
+              </linearGradient>
+              <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+                <circle cx="16" cy="16" r="4" fill="rgba(255,255,255,0.22)" />
+              </pattern>
+            </defs>
+            <rect width="800" height="600" rx="56" fill="url(#bg)" />
+            <rect width="800" height="600" rx="56" fill="url(#dots)" opacity="0.56" />
+            <circle cx="640" cy="120" r="96" fill="rgba(255,255,255,0.24)" />
+            <circle cx="132" cy="112" r="52" fill="rgba(255,255,255,0.24)" />
+            <rect x="60" y="62" width="220" height="42" rx="21" fill="${palette.badge}" />
+            <text x="170" y="89" text-anchor="middle" font-family="Baloo 2, Comic Neue, PingFang SC, sans-serif" font-size="24" font-weight="700" fill="${palette.accent}">
+              儿童白名单
+            </text>
+            <text x="60" y="310" font-family="Baloo 2, Comic Neue, PingFang SC, sans-serif" font-size="82" font-weight="700" fill="${palette.accentSoft}">
+              ${safeLine1}
+            </text>
+            ${
+              safeLine2
+                ? `<text x="60" y="396" font-family="Baloo 2, Comic Neue, PingFang SC, sans-serif" font-size="82" font-weight="700" fill="${palette.accentSoft}">${safeLine2}</text>`
+                : ""
+            }
+            <circle cx="640" cy="426" r="94" fill="rgba(255,255,255,0.26)" />
+            <circle cx="640" cy="426" r="76" fill="${palette.accent}" opacity="0.85" />
+            <path d="M618 380L692 426L618 472Z" fill="white" />
+          </svg>
+        `;
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+      }
+
+      function splitTitleLines(title) {
+        const chars = Array.from(title);
+        if (chars.length <= 6) {
+          return [title, ""];
+        }
+        if (chars.length <= 10) {
+          return [chars.slice(0, 5).join(""), chars.slice(5).join("")];
+        }
+        const middle = Math.ceil(chars.length / 2);
+        return [chars.slice(0, middle).join(""), chars.slice(middle, middle + 8).join("")];
+      }
+
+      function escapeSvg(text) {
+        return String(text || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value);
+      }
+    })();
+  </script>
+</body>
+</html>

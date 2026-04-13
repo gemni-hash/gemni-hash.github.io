@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd66c" />
+      <stop offset="100%" stop-color="#4b74ff" />
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="42" fill="url(#bg)" />
+  <circle cx="140" cy="42" r="18" fill="#fff5cf" opacity="0.9" />
+  <rect x="24" y="52" width="132" height="86" rx="20" fill="#ffffff" opacity="0.92" />
+  <path d="M76 71L112 95L76 119Z" fill="#3658d4" />
+  <rect x="28" y="24" width="58" height="16" rx="8" fill="#fff6d4" />
+  <text x="57" y="35" text-anchor="middle" font-family="Baloo 2, Comic Neue, PingFang SC, sans-serif" font-size="8" font-weight="700" fill="#3658d4">儿童模式</text>
+  <circle cx="46" cy="152" r="7" fill="#ffffff" opacity="0.82" />
+  <circle cx="64" cy="152" r="7" fill="#ffffff" opacity="0.68" />
+  <circle cx="82" cy="152" r="7" fill="#ffffff" opacity="0.54" />
+</svg>
