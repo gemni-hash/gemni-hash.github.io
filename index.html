@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>小天才影院</title>
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi5bCP5aSp5omN5b2x6ZmiIiwic2hvcnRfbmFtZSI6IuW9semZoiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmMGY5ZmYiLCJ0aGVtZV9jb2xvciI6IiM2MzY2ZjEifQ==" />
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
+  <style>
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; }
+    #app { height: 100%; }
+
+    /* 自定义滚动条 */
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+
+    /* 卡片按压效果 */
+    .card-press { transition: transform 0.15s ease; }
+    .card-press:active { transform: scale(0.93) !important; }
+
+    /* 锁屏背景动画 */
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    .float-anim { animation: float 3s ease-in-out infinite; }
+    .float-anim-delay { animation: float 3s ease-in-out 1.5s infinite; }
+
+    /* 番茄钟进度环 */
+    .timer-ring { transition: stroke-dashoffset 1s linear; }
+
+    /* 选集按钮 */
+    .ep-btn {
+      min-width: 44px; min-height: 44px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 12px; font-weight: 700; font-size: 16px;
+      transition: all 0.15s ease;
+    }
+    .ep-btn:active { transform: scale(0.9); }
+
+    /* 密码输入框 */
+    input[type="password"], input[type="text"], input[type="number"], input[type="url"] {
+      font-size: 16px; /* 防止 iOS 自动缩放 */
+    }
+
+    /* 播放器容器 */
+    .player-wrapper {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      border-radius: 24px;
+      overflow: hidden;
+      background: #1a1a2e;
+    }
+    .player-wrapper iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- ==================== file:// 协议警告 ==================== -->
+  <div v-if="isFileProtocol" class="h-full flex flex-col items-center justify-center p-8 text-center"
+       style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+    <div class="text-6xl mb-4">⚠️</div>
+    <h1 class="text-2xl font-bold text-yellow-800 mb-3">需要通过 HTTP 服务访问</h1>
+    <p class="text-yellow-700 mb-6 max-w-md">
+      直接双击打开 HTML 文件（file:// 协议）会导致 Bilibili 播放器无法加载。<br>请用以下命令启动本地服务器：
+    </p>
+    <div class="bg-yellow-900 text-yellow-100 rounded-2xl px-6 py-4 font-mono text-sm mb-4 select-all">
+      cd {{ currentDir }} && python3 -m http.server 8080
+    </div>
+    <p class="text-yellow-700">然后访问 <strong class="select-all">http://localhost:8080</strong></p>
+    <p class="text-yellow-600 text-sm mt-4">或直接运行项目目录下的 <strong>start.sh</strong></p>
+  </div>
+
+  <!-- ==================== 锁定界面 ==================== -->
+  <div v-if="state === 'locked'" class="h-full flex flex-col items-center justify-center relative overflow-hidden"
+       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <!-- 装饰元素 -->
+    <div class="absolute top-10 left-10 text-8xl float-anim opacity-30">🌙</div>
+    <div class="absolute bottom-20 right-10 text-7xl float-anim-delay opacity-30">⭐</div>
+    <div class="absolute top-1/4 right-1/4 text-5xl float-anim opacity-20">☁️</div>
+
+    <div class="text-center animate__animated animate__bounceIn z-10">
+      <div class="text-8xl mb-6">😴</div>
+      <h1 class="text-white text-3xl font-bold mb-3">眼睛要休息一下啦</h1>
+      <p class="text-purple-200 text-lg mb-8">去玩一会儿积木吧！</p>
+
+      <!-- 倒计时圆环 -->
+      <div class="relative inline-block mb-6">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="8" />
+          <circle cx="80" cy="80" r="70" fill="none" stroke="white" stroke-width="8"
+                  stroke-linecap="round"
+                  :stroke-dasharray="2 * Math.PI * 70"
+                  :stroke-dashoffset="2 * Math.PI * 70 * (1 - lockProgress)"
+                  class="timer-ring"
+                  transform="rotate(-90 80 80)" />
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <span class="text-white text-2xl font-bold">{{ lockRemainingText }}</span>
+        </div>
+      </div>
+
+      <div class="block">
+        <button @click="showAdminFromLock = true"
+                class="text-purple-300 text-sm underline opacity-60">家长解锁</button>
+      </div>
+    </div>
+
+    <!-- 家长解锁弹窗 -->
+    <div v-if="showAdminFromLock" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         @click.self="showAdminFromLock = false">
+      <div class="bg-white rounded-3xl p-8 mx-6 w-full max-w-sm animate__animated animate__zoomIn">
+        <h3 class="text-xl font-bold text-center mb-4">家长解锁</h3>
+        <input v-model="unlockPwd" type="password" placeholder="请输入管理密码"
+               class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 mb-4 text-center text-lg focus:border-indigo-400 outline-none" />
+        <button @click="adminUnlock"
+                class="w-full bg-indigo-500 text-white rounded-2xl py-3 text-lg font-bold active:bg-indigo-600">
+          确认解锁
+        </button>
+        <p v-if="unlockError" class="text-red-400 text-center mt-2 text-sm">密码错误</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 主界面 (列表 + 播放) ==================== -->
+  <div v-else class="h-full flex flex-col" style="background: #f0f4ff;">
+
+    <!-- 顶部栏 -->
+    <header class="flex items-center justify-between px-5 py-3 flex-shrink-0"
+            style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding-top: max(env(safe-area-inset-top), 12px);">
+      <div class="flex items-center gap-2">
+        <span v-if="state === 'playing'" @click="backToList" class="text-white text-2xl cursor-pointer">←</span>
+        <h1 class="text-white text-xl font-bold">🎬 小天才影院</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- 番茄钟显示 -->
+        <div class="bg-white bg-opacity-20 rounded-full px-3 py-1 flex items-center gap-1">
+          <span class="text-white text-sm">🍅</span>
+          <span class="text-white text-sm font-bold">{{ timerText }}</span>
+        </div>
+        <button @click="promptAdmin" class="text-white opacity-70 text-xl">⚙️</button>
+      </div>
+    </header>
+
+    <!-- ========= 视频列表 ========= -->
+    <div v-if="state === 'list'" class="flex-1 overflow-auto custom-scroll p-4">
+      <div v-if="videos.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400">
+        <div class="text-6xl mb-4">📺</div>
+        <p class="text-lg">还没有视频哦</p>
+        <p class="text-sm">请家长点右上角 ⚙️ 添加</p>
+      </div>
+      <div v-else class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+        <div v-for="(v, i) in videos" :key="i"
+             @click="playVideo(v)"
+             class="card-press bg-white rounded-3xl overflow-hidden shadow-md cursor-pointer animate__animated animate__fadeInUp"
+             :style="{ animationDelay: (i * 0.07) + 's' }">
+          <div class="relative" style="padding-bottom: 56.25%; background: #e0e7ff;">
+            <img v-if="v.cover" :src="v.cover" class="absolute inset-0 w-full h-full object-cover" loading="lazy" referrerpolicy="no-referrer" />
+            <div v-else class="absolute inset-0 flex items-center justify-center text-5xl">🎞️</div>
+            <div v-if="v.episodes > 1"
+                 class="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full">
+              {{ v.episodes }}集
+            </div>
+          </div>
+          <div class="p-3">
+            <h3 class="font-bold text-gray-700 truncate text-base">{{ v.title }}</h3>
+            <p class="text-xs text-gray-400 mt-1">{{ v.id }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========= 播放界面 ========= -->
+    <div v-if="state === 'playing'" class="flex-1 overflow-auto custom-scroll">
+      <div class="p-4">
+        <!-- 播放器 -->
+        <div class="player-wrapper mb-4">
+          <iframe :src="playerUrl" allowfullscreen allow="autoplay; fullscreen; encrypted-media" referrerpolicy="no-referrer"></iframe>
+        </div>
+
+        <!-- 视频标题 -->
+        <h2 class="text-lg font-bold text-gray-700 mb-3 px-1">
+          {{ currentVideo.title }}
+          <span v-if="currentVideo.episodes > 1" class="text-indigo-400 text-sm font-normal ml-2">第{{ currentPage }}集</span>
+        </h2>
+
+        <!-- 选集按钮 -->
+        <div v-if="currentVideo.episodes > 1" class="flex flex-wrap gap-2 px-1">
+          <button v-for="ep in currentVideo.episodes" :key="ep"
+                  @click="currentPage = ep"
+                  :class="currentPage === ep
+                    ? 'bg-indigo-500 text-white shadow-lg'
+                    : 'bg-white text-gray-600 border-2 border-gray-200'"
+                  class="ep-btn">
+            {{ ep }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 管理面板 ==================== -->
+  <div v-if="showAdmin" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center"
+       @click.self="showAdmin = false">
+    <div class="bg-white w-full sm:w-auto sm:min-w-96 sm:max-w-lg sm:rounded-3xl rounded-t-3xl max-h-screen overflow-auto custom-scroll animate__animated animate__slideInUp"
+         style="max-height: 90vh;">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-gray-800">⚙️ 家长管理</h2>
+          <button @click="showAdmin = false" class="text-gray-400 text-2xl leading-none">&times;</button>
+        </div>
+
+        <!-- 设置区 -->
+        <div class="bg-indigo-50 rounded-2xl p-4 mb-5">
+          <h3 class="font-bold text-indigo-600 mb-3">观看设置</h3>
+          <div class="flex items-center gap-3 mb-3">
+            <label class="text-gray-600 text-sm whitespace-nowrap">单次时长</label>
+            <input v-model.number="config.viewMinutes" type="number" min="1" max="120"
+                   class="flex-1 border-2 border-indigo-200 rounded-xl px-3 py-2 text-center font-bold outline-none focus:border-indigo-400" />
+            <span class="text-gray-500 text-sm">分钟</span>
+          </div>
+          <div class="flex items-center gap-3 mb-3">
+            <label class="text-gray-600 text-sm whitespace-nowrap">休息时长</label>
+            <input v-model.number="config.restMinutes" type="number" min="1" max="120"
+                   class="flex-1 border-2 border-indigo-200 rounded-xl px-3 py-2 text-center font-bold outline-none focus:border-indigo-400" />
+            <span class="text-gray-500 text-sm">分钟</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="text-gray-600 text-sm whitespace-nowrap">管理密码</label>
+            <input v-model="config.password" type="text"
+                   class="flex-1 border-2 border-indigo-200 rounded-xl px-3 py-2 text-center font-bold outline-none focus:border-indigo-400" />
+          </div>
+          <button @click="saveConfig" class="mt-3 w-full bg-indigo-500 text-white rounded-xl py-2 font-bold text-sm active:bg-indigo-600">
+            保存设置
+          </button>
+        </div>
+
+        <!-- 添加视频 -->
+        <div class="bg-green-50 rounded-2xl p-4 mb-5">
+          <h3 class="font-bold text-green-600 mb-3">添加视频</h3>
+          <input v-model="newVideo.id" type="text" placeholder="BV号 / ss号 / ep号"
+                 class="w-full border-2 border-green-200 rounded-xl px-3 py-2 mb-2 outline-none focus:border-green-400" />
+          <input v-model="newVideo.title" type="text" placeholder="视频标题"
+                 class="w-full border-2 border-green-200 rounded-xl px-3 py-2 mb-2 outline-none focus:border-green-400" />
+          <input v-model="newVideo.cover" type="url" placeholder="封面图 URL (可选)"
+                 class="w-full border-2 border-green-200 rounded-xl px-3 py-2 mb-2 outline-none focus:border-green-400" />
+          <input v-model.number="newVideo.episodes" type="number" min="1" placeholder="总集数 (默认1)"
+                 class="w-full border-2 border-green-200 rounded-xl px-3 py-2 mb-3 outline-none focus:border-green-400" />
+          <button @click="addVideo"
+                  class="w-full bg-green-500 text-white rounded-xl py-2 font-bold text-sm active:bg-green-600">
+            ＋ 添加
+          </button>
+          <p v-if="addMsg" class="text-center text-sm mt-2" :class="addMsgOk ? 'text-green-500' : 'text-red-400'">{{ addMsg }}</p>
+        </div>
+
+        <!-- 视频列表管理 -->
+        <div class="bg-gray-50 rounded-2xl p-4">
+          <h3 class="font-bold text-gray-600 mb-3">已添加 ({{ videos.length }})</h3>
+          <div v-if="videos.length === 0" class="text-gray-400 text-sm text-center py-4">暂无视频</div>
+          <div v-for="(v, i) in videos" :key="i"
+               class="flex items-center gap-3 bg-white rounded-xl p-3 mb-2 last:mb-0">
+            <div class="w-16 h-10 rounded-lg overflow-hidden bg-indigo-100 flex-shrink-0">
+              <img v-if="v.cover" :src="v.cover" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+              <div v-else class="w-full h-full flex items-center justify-center text-lg">🎞️</div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-sm text-gray-700 truncate">{{ v.title }}</p>
+              <p class="text-xs text-gray-400">{{ v.id }} · {{ v.episodes }}集</p>
+            </div>
+            <button @click="removeVideo(i)" class="text-red-400 text-xl flex-shrink-0 px-1">🗑️</button>
+          </div>
+        </div>
+
+        <!-- 重置按钮 -->
+        <button @click="resetTimer" class="mt-4 w-full bg-yellow-400 text-yellow-900 rounded-xl py-2 font-bold text-sm active:bg-yellow-500">
+          🍅 重置观看计时器
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 密码输入弹窗 ==================== -->
+  <div v-if="showPwdPrompt" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+       @click.self="showPwdPrompt = false">
+    <div class="bg-white rounded-3xl p-8 mx-6 w-full max-w-sm animate__animated animate__zoomIn">
+      <h3 class="text-xl font-bold text-center mb-4">🔒 家长验证</h3>
+      <input v-model="adminPwd" type="password" placeholder="请输入管理密码"
+             @keyup.enter="verifyAdmin"
+             class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 mb-4 text-center text-lg focus:border-indigo-400 outline-none" />
+      <button @click="verifyAdmin"
+              class="w-full bg-indigo-500 text-white rounded-2xl py-3 text-lg font-bold active:bg-indigo-600">
+        确认
+      </button>
+      <p v-if="pwdError" class="text-red-400 text-center mt-2 text-sm">密码错误</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+
+const STORAGE_KEYS = {
+  videos: 'kids_videos_data',
+  config: 'kids_config',
+  lockUntil: 'kids_lock_until',
+};
+
+const DEFAULT_CONFIG = {
+  viewMinutes: 20,
+  restMinutes: 15,
+  password: '123',
+};
+
+function loadJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch { return fallback; }
+}
+
+createApp({
+  setup() {
+    // ---- file:// 协议检测 ----
+    const isFileProtocol = ref(window.location.protocol === 'file:');
+    const currentDir = ref(window.location.pathname.replace(/\/[^/]*$/, ''));
+
+    // ---- 数据 ----
+    const videos = ref(loadJSON(STORAGE_KEYS.videos, []));
+    const config = ref({ ...DEFAULT_CONFIG, ...loadJSON(STORAGE_KEYS.config, {}) });
+    const state = ref('list');           // 'list' | 'playing' | 'locked'
+    const currentVideo = ref(null);
+    const currentPage = ref(1);
+
+    // ---- 计时器 ----
+    const remainingSeconds = ref(config.value.viewMinutes * 60);
+    const lockUntilTs = ref(Number(localStorage.getItem(STORAGE_KEYS.lockUntil) || 0));
+    const now = ref(Date.now());
+    let tickHandle = null;
+
+    // ---- UI 状态 ----
+    const showAdmin = ref(false);
+    const showPwdPrompt = ref(false);
+    const showAdminFromLock = ref(false);
+    const adminPwd = ref('');
+    const unlockPwd = ref('');
+    const pwdError = ref(false);
+    const unlockError = ref(false);
+    const addMsg = ref('');
+    const addMsgOk = ref(false);
+    const newVideo = ref({ id: '', title: '', cover: '', episodes: 1 });
+
+    // ---- 启动时锁定检查 ----
+    function checkLock() {
+      if (lockUntilTs.value && Date.now() < lockUntilTs.value) {
+        state.value = 'locked';
+      }
+    }
+
+    // ---- 全局 tick (每秒) ----
+    function tick() {
+      now.value = Date.now();
+
+      // 锁定中 → 检查是否解锁
+      if (state.value === 'locked') {
+        if (now.value >= lockUntilTs.value) {
+          unlock();
+        }
+        return;
+      }
+
+      // 播放中 → 扣减时间
+      if (state.value === 'playing') {
+        remainingSeconds.value = Math.max(0, remainingSeconds.value - 1);
+        if (remainingSeconds.value <= 0) {
+          triggerLock();
+        }
+      }
+    }
+
+    function triggerLock() {
+      const until = Date.now() + config.value.restMinutes * 60 * 1000;
+      lockUntilTs.value = until;
+      localStorage.setItem(STORAGE_KEYS.lockUntil, String(until));
+      state.value = 'locked';
+      currentVideo.value = null;
+    }
+
+    function unlock() {
+      lockUntilTs.value = 0;
+      localStorage.removeItem(STORAGE_KEYS.lockUntil);
+      state.value = 'list';
+      remainingSeconds.value = config.value.viewMinutes * 60;
+    }
+
+    // ---- 计算属性 ----
+    const timerText = computed(() => {
+      const m = Math.floor(remainingSeconds.value / 60);
+      const s = remainingSeconds.value % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    });
+
+    const lockRemaining = computed(() => {
+      return Math.max(0, Math.ceil((lockUntilTs.value - now.value) / 1000));
+    });
+
+    const lockRemainingText = computed(() => {
+      const total = lockRemaining.value;
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    });
+
+    const lockProgress = computed(() => {
+      if (!lockUntilTs.value) return 0;
+      const totalLock = config.value.restMinutes * 60;
+      const elapsed = totalLock - lockRemaining.value;
+      return Math.min(1, elapsed / totalLock);
+    });
+
+    const playerUrl = computed(() => {
+      if (!currentVideo.value) return '';
+      const v = currentVideo.value;
+      const base = 'https://player.bilibili.com/player.html?';
+      const params = { isOutside: true, danmaku: 0, high_quality: 1, autoplay: 1 };
+
+      if (v.id.startsWith('BV')) {
+        params.bvid = v.id;
+        params.p = currentPage.value;
+      } else if (v.id.startsWith('ss')) {
+        params.season_id = v.id.replace('ss', '');
+      } else if (v.id.startsWith('ep')) {
+        params.ep_id = v.id.replace('ep', '');
+      } else {
+        params.bvid = v.id;
+        params.p = currentPage.value;
+      }
+
+      return base + Object.entries(params).map(([k, val]) => `${k}=${val}`).join('&');
+    });
+
+    // ---- 操作 ----
+    function playVideo(v) {
+      currentVideo.value = v;
+      currentPage.value = 1;
+      state.value = 'playing';
+    }
+
+    function backToList() {
+      state.value = 'list';
+      currentVideo.value = null;
+    }
+
+    function promptAdmin() {
+      adminPwd.value = '';
+      pwdError.value = false;
+      showPwdPrompt.value = true;
+    }
+
+    function verifyAdmin() {
+      if (adminPwd.value === config.value.password) {
+        showPwdPrompt.value = false;
+        showAdmin.value = true;
+        pwdError.value = false;
+      } else {
+        pwdError.value = true;
+      }
+    }
+
+    function adminUnlock() {
+      if (unlockPwd.value === config.value.password) {
+        showAdminFromLock.value = false;
+        unlock();
+        unlockError.value = false;
+      } else {
+        unlockError.value = true;
+      }
+    }
+
+    function saveConfig() {
+      localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config.value));
+      // 同步更新剩余时间（仅在列表状态下）
+      if (state.value === 'list') {
+        remainingSeconds.value = config.value.viewMinutes * 60;
+      }
+    }
+
+    function addVideo() {
+      const id = newVideo.value.id.trim();
+      if (!id) { addMsg.value = '请输入 BV/ss/ep 号'; addMsgOk.value = false; return; }
+      if (!newVideo.value.title.trim()) { addMsg.value = '请输入标题'; addMsgOk.value = false; return; }
+
+      videos.value.push({
+        id: id,
+        title: newVideo.value.title.trim(),
+        cover: newVideo.value.cover.trim(),
+        episodes: Math.max(1, newVideo.value.episodes || 1),
+      });
+      localStorage.setItem(STORAGE_KEYS.videos, JSON.stringify(videos.value));
+      newVideo.value = { id: '', title: '', cover: '', episodes: 1 };
+      addMsg.value = '添加成功！';
+      addMsgOk.value = true;
+      setTimeout(() => addMsg.value = '', 2000);
+    }
+
+    function removeVideo(index) {
+      videos.value.splice(index, 1);
+      localStorage.setItem(STORAGE_KEYS.videos, JSON.stringify(videos.value));
+    }
+
+    function resetTimer() {
+      remainingSeconds.value = config.value.viewMinutes * 60;
+      lockUntilTs.value = 0;
+      localStorage.removeItem(STORAGE_KEYS.lockUntil);
+      if (state.value === 'locked') {
+        state.value = 'list';
+      }
+    }
+
+    // ---- 生命周期 ----
+    onMounted(() => {
+      checkLock();
+      tickHandle = setInterval(tick, 1000);
+    });
+
+    onUnmounted(() => {
+      clearInterval(tickHandle);
+    });
+
+    // 监听 videos 变化持久化
+    watch(videos, (val) => {
+      localStorage.setItem(STORAGE_KEYS.videos, JSON.stringify(val));
+    }, { deep: true });
+
+    return {
+      isFileProtocol, currentDir,
+      videos, config, state,
+      currentVideo, currentPage,
+      remainingSeconds, timerText,
+      lockRemainingText, lockProgress,
+      playerUrl,
+      showAdmin, showPwdPrompt, showAdminFromLock,
+      adminPwd, unlockPwd, pwdError, unlockError,
+      addMsg, addMsgOk, newVideo,
+      playVideo, backToList,
+      promptAdmin, verifyAdmin, adminUnlock,
+      saveConfig, addVideo, removeVideo, resetTimer,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
